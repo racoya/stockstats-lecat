@@ -1,5 +1,7 @@
 """Custom exception classes for the LECAT compiler pipeline."""
 
+from __future__ import annotations
+
 
 class LECATError(Exception):
     """Base exception for all LECAT errors."""

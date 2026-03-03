@@ -1,0 +1,81 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lecat"
+version = "2.0.0"
+description = "Logical Expression Compiler for Algorithmic Trading — DSL compiler with genetic strategy optimization"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.9"
+authors = [
+    {name = "LECAT Team"},
+]
+keywords = ["trading", "dsl", "compiler", "genetic-algorithm", "backtesting", "algorithmic-trading"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Financial and Insurance Industry",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Office/Business :: Financial :: Investment",
+    "Topic :: Software Development :: Compilers",
+]
+dependencies = []  # Core engine uses stdlib only
+
+[project.optional-dependencies]
+dashboard = [
+    "streamlit>=1.30.0",
+    "plotly>=5.18.0",
+    "pandas>=2.0.0",
+]
+data = [
+    "numpy>=1.24.0",
+    "matplotlib>=3.7.0",
+]
+config = [
+    "pyyaml>=6.0",
+]
+all = [
+    "streamlit>=1.30.0",
+    "plotly>=5.18.0",
+    "pandas>=2.0.0",
+    "numpy>=1.24.0",
+    "matplotlib>=3.7.0",
+    "pyyaml>=6.0",
+]
+dev = [
+    "pytest>=7.0.0",
+    "black>=23.0",
+    "isort>=5.12",
+]
+
+[project.scripts]
+lecat = "lecat.main:main"
+
+[project.urls]
+Homepage = "https://github.com/lecat/stockstats-lecat"
+Documentation = "https://github.com/lecat/stockstats-lecat/tree/main/docs"
+Repository = "https://github.com/lecat/stockstats-lecat"
+
+[tool.setuptools.packages.find]
+include = ["lecat*"]
+
+# --- Code Quality ---
+
+[tool.black]
+line-length = 100
+target-version = ["py39", "py310", "py311", "py312"]
+
+[tool.isort]
+profile = "black"
+line_length = 100
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]

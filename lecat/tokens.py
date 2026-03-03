@@ -1,5 +1,6 @@
 """Token type definitions for the LECAT lexer."""
 
+from __future__ import annotations
 from dataclasses import dataclass
 from enum import Enum, auto
 

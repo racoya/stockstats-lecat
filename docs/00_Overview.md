@@ -1,9 +1,9 @@
 # LECAT — System Design Document (SDD) & Software Requirements Specification (SRS)
 
 **Project:** Logical Expression Compiler for Algorithmic Trading (LECAT)
-**Version:** 2.0
+**Version:** 2.0.0
 **Date:** March 3, 2026
-**Phase:** 4 — Interface & Deployment
+**Phase:** 5 — Release
 **Standards:** IEEE 830 (SRS), EBNF (Grammar), C4 Model (Architecture)
 
 ---

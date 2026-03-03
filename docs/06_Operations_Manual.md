@@ -20,7 +20,7 @@ This means: *"Buy when RSI is above 70 AND the price is above the 50-period Simp
 
 | Requirement | Minimum | Recommended |
 |-------------|---------|-------------|
-| Python | 3.10+ | 3.12+ |
+| Python | 3.9+ | 3.12+ |
 | RAM | 2 GB | 8 GB |
 | CPU Cores | 1 | 4+ (for parallel optimization) |
 | Disk | 50 MB | 200 MB (for logs and saved strategies) |
@@ -42,19 +42,34 @@ source venv/bin/activate    # macOS/Linux
 ```
 
 **Step 3:** Install dependencies
+
+*Option A — Using requirements.txt:*
 ```bash
 pip install -r requirements.txt
 ```
 
+*Option B — Using pip install (includes the `lecat` CLI command):*
+```bash
+pip install -e ".[all]"     # Install with all optional dependencies
+# or
+pip install -e ".[all,dev]" # Also include dev tools (pytest, black, isort)
+```
+
+*Option C — Using the Makefile:*
+```bash
+make install       # Same as pip install -r requirements.txt
+make install-dev   # Same as pip install -e ".[all,dev]"
+```
+
 **Step 4:** Verify the installation
 ```bash
-python3 -m unittest discover -s tests -v
+python3 -m unittest discover -s tests -v    # or: make test
 ```
 You should see `Ran 235 tests ... OK`.
 
 **Step 5:** Launch the dashboard
 ```bash
-streamlit run lecat/dashboard/app.py
+streamlit run lecat/dashboard/app.py    # or: make run
 ```
 Open your browser to `http://localhost:8501`.
 
@@ -441,8 +456,15 @@ Example log output:
 ## 8. Running Tests
 
 ```bash
-# Run all 235 tests
+# Using Make (recommended)
+make test                # Run all 235 tests with pytest
+make test-fast           # Quick run without verbose output
+
+# Using unittest directly
 python3 -m unittest discover -s tests -v
+
+# Using pytest directly
+python3 -m pytest tests/ -v
 
 # Run a specific test module
 python3 -m unittest tests.test_lexer -v
@@ -473,14 +495,58 @@ python3 -m unittest tests.test_indicators.TestMACDIndicator -v
 
 ---
 
-## 9. Troubleshooting
+## 9. Developer Shortcuts (Makefile)
+
+The project includes a `Makefile` for common tasks:
+
+| Command | Description |
+|---------|-------------|
+| `make help` | Show all available commands |
+| `make install` | Install production dependencies |
+| `make install-dev` | Install with dev tools (black, isort, pytest) |
+| `make format` | Auto-format code with black + isort |
+| `make lint` | Check formatting without modifying files |
+| `make test` | Run all tests with pytest |
+| `make test-fast` | Quick test run (no verbose) |
+| `make run` | Launch the Streamlit dashboard |
+| `make run-cli` | Run CLI with default settings |
+| `make clean` | Remove caches, logs, and build artifacts |
+
+---
+
+## 10. Python Packaging
+
+LECAT is packaged with `pyproject.toml` and can be installed as a Python package:
+
+```bash
+# Install in development mode
+pip install -e .
+
+# Install with optional dependency groups
+pip install -e ".[dashboard]"   # streamlit + plotly + pandas
+pip install -e ".[data]"        # numpy + matplotlib
+pip install -e ".[all]"         # Everything
+pip install -e ".[all,dev]"     # Everything + pytest, black, isort
+```
+
+After installation, `import lecat` works from anywhere, and the `lecat` CLI command is available:
+
+```bash
+lecat --help
+lecat --generations 10 --strategies 100 --cores 4
+```
+
+---
+
+## 11. Troubleshooting
 
 ### Common Issues
 
 | Problem | Cause | Solution |
 |---------|-------|----------|
-| `ModuleNotFoundError: streamlit` | Dependencies not installed | Run `pip install -r requirements.txt` |
+| `ModuleNotFoundError: streamlit` | Dependencies not installed | Run `pip install -r requirements.txt` or `make install` |
 | `ModuleNotFoundError: plotly` | Missing visualization lib | Run `pip install plotly` |
+| `TypeError: unsupported operand \| ` | Python 3.9 without future imports | Ensure all `.py` files have `from __future__ import annotations` |
 | Dashboard blank after upload | CSV format issue | Check column names match §2.1; ensure no empty rows |
 | `ParserError: Chained comparison` | `A > B > C` is not allowed | Rewrite as `A > B AND B > C` |
 | `InsufficientData` | Indicator needs more bars | Increase data size or reduce indicator period |
@@ -489,10 +555,12 @@ python3 -m unittest tests.test_indicators.TestMACDIndicator -v
 | Dashboard won't launch | Port in use | `streamlit run lecat/dashboard/app.py --server.port 8502` |
 | Optimizer takes too long | Large population/generations | Reduce pop size, use `--cores 4` for parallel |
 | Log file not created | Permission issue | Check `logs/` directory is writable |
+| `pip install .` fails | Missing setuptools | Run `pip install setuptools wheel` first |
 
 ### Getting Help
 
 1. Check the **Function Reference** tab in the dashboard for correct syntax
 2. Start with **Quick Presets** and modify from there
 3. Review `logs/lecat.log` for detailed error messages
-4. Run tests to verify installation: `python3 -m unittest discover -s tests`
+4. Run tests to verify installation: `make test` or `python3 -m unittest discover -s tests`
+5. Check the [README](../README.md) for architecture overview and quickstart
