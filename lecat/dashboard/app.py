@@ -1277,8 +1277,8 @@ def _test_indicator(name: str, args_list: list, formula: str, ctx: MarketContext
     try:
         from lecat.dynamic_registry import _substitute_args, _evaluate_composite
 
-        # Build test args with default values
-        test_args = {a: 0 for a in args_list}
+        # Build test args with default values (use 14 instead of 0 to avoid ZeroDivisionError in MA/RSI etc)
+        test_args = {a: 14 for a in args_list}
         resolved = _substitute_args(formula, args_list, test_args)
 
         # Try to compile
