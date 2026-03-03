@@ -14,6 +14,8 @@ The LECAT grammar is designed to express boolean trading conditions in a natural
 RSI(14) > 80 AND PRICE > SMA(50)
 NOT (VOLUME < SMA_VOL(20)) OR MACD(12, 26, 9) > 0
 EMA(10) >= EMA(50) AND RSI(14) <= 30
+RSI(14)[1] > 70 AND PRICE > SMA(50)
+(close > open)[1] AND VOLUME > SMA_VOL(20)
 ```
 
 ---
@@ -23,7 +25,7 @@ EMA(10) >= EMA(50) AND RSI(14) <= 30
 ```ebnf
 (* ============================================================ *)
 (* LECAT DSL — Extended Backus-Naur Form Grammar                *)
-(* Version: 1.0                                                  *)
+(* Version: 1.1 — CR-001: Context Shifting                      *)
 (* ============================================================ *)
 
 (* --- Top-Level Rule --- *)
@@ -44,11 +46,14 @@ arithmetic      = unary ;
 unary           = "-" , unary
                 | primary ;
 
-(* --- Primary Expressions --- *)
-primary         = literal
-                | function_call
-                | identifier
-                | "(" , expression , ")" ;
+(* --- Primary Expressions (with optional offset) --- *)
+primary         = ( literal
+                  | function_call
+                  | identifier
+                  | "(" , expression , ")" ) , [ offset ] ;
+
+(* --- Context Shifting (CR-001) --- *)
+offset          = "[" , int_literal , "]" ;
 
 (* --- Function Calls --- *)
 function_call   = identifier , "(" , [ arg_list ] , ")" ;
@@ -79,7 +84,8 @@ Precedence is from **lowest (evaluated last)** to **highest (evaluated first)**:
 | 3 | `NOT` | Right (unary) | Logical negation |
 | 4 | `>` `<` `>=` `<=` `==` `!=` | Non-associative | Comparison |
 | 5 | `-` (unary) | Right (unary) | Arithmetic negation |
-| 6 (highest) | `()` function calls, literals | — | Primary |
+| 6 | `()` function calls, literals | — | Primary |
+| 7 (highest) | `[]` (offset) | Left (postfix) | Context shift |
 
 > **Non-associative comparisons** means chaining like `A > B > C` is a **syntax error**. Use `A > B AND B > C` instead.
 
@@ -103,6 +109,8 @@ The Lexer must recognize the following token types:
 | `LPAREN` | `(` | — |
 | `RPAREN` | `)` | — |
 | `COMMA` | `,` | — |
+| `LBRACKET` | `[` | — |
+| `RBRACKET` | `]` | — |
 | `EOF` | End of input | — |
 
 **Lexer Rules:**
@@ -158,6 +166,29 @@ COMP_OP(">") INTEGER(0)
   VOLUME  SMA_VOL(20)
 ```
 
+### Example 3: `RSI(14)[1] > 70 AND PRICE > SMA(50)` *(CR-001)*
+
+**Token Stream:**
+```
+IDENTIFIER("RSI") LPAREN INTEGER(14) RPAREN
+LBRACKET INTEGER(1) RBRACKET
+COMP_OP(">") INTEGER(70)
+AND
+IDENTIFIER("PRICE") COMP_OP(">")
+IDENTIFIER("SMA") LPAREN INTEGER(50) RPAREN
+```
+
+**Parse Tree (simplified):**
+```
+         AND
+        /    \
+       >      >
+      / \    / \
+  OFFSET  70  PRICE  SMA(50)
+   |[1]
+ RSI(14)
+```
+
 ---
 
 ## 6. Grammar Validation Rules
@@ -170,3 +201,5 @@ COMP_OP(">") INTEGER(0)
 | G-004 | Parentheses override all precedence | Standard mathematical convention |
 | G-005 | Maximum expression length: 4096 characters | Prevents resource exhaustion during lexing |
 | G-006 | Maximum nesting depth: 256 levels | Prevents stack overflow in recursive-descent parser |
+| G-007 | Offset values must be non-negative integers | Prevents look-ahead bias via negative offsets (CR-001) |
+| G-008 | Offset `[0]` is a no-op (identity) | Equivalent to no offset; parser may optimize away (CR-001) |

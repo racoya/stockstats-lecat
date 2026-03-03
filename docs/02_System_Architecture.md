@@ -107,6 +107,7 @@ class NodeType(Enum):
     FUNCTION_CALL  = "function_call"
     LITERAL        = "literal"
     IDENTIFIER     = "identifier"
+    OFFSET         = "offset"         # CR-001: Context Shifting
 ```
 
 ### 4.2 Node Schemas (JSON Representation)
@@ -174,6 +175,21 @@ Represents bare names like `PRICE`, `VOLUME` (resolved via Registry as zero-arg 
   "name": "PRICE"
 }
 ```
+
+#### OffsetNode *(CR-001)*
+Represents a time-shifted evaluation (e.g., `RSI(14)[1]` — "RSI 1 bar ago").
+```json
+{
+  "type": "offset",
+  "shift_amount": 1,
+  "child": { "...child node..." }
+}
+```
+
+**Constraints:**
+- `shift_amount` must be a non-negative integer (enforced by Parser).
+- `shift_amount = 0` is semantically a no-op (identity).
+- The `child` node is evaluated with `bar_index - shift_amount`.
 
 ### 4.3 Complete AST Example
 
@@ -280,6 +296,27 @@ class Evaluator:
 **Input:** Immutable AST + MarketContext
 **Output:** `EvaluationResult` containing a boolean array (one value per bar)
 **Errors:** `EvaluationError` on runtime failures (see [Error Handling](./04_Error_Handling.md))
+
+**Handling Offsets (CR-001):**
+
+When visiting an `OffsetNode`, the Evaluator must:
+1. Calculate `past_index = context.bar_index - node.shift_amount`.
+2. If `past_index < 0`, return `FunctionResult.insufficient_data()`.
+3. Create a **shallow copy** of the context: `temp_ctx = context.with_index(past_index)`.
+4. Recursively call `evaluate(node.child, temp_ctx)`.
+
+```python
+def visit_offset(self, node: OffsetNode, context: MarketContext):
+    past_index = context.bar_index - node.shift_amount
+    if past_index < 0:
+        return FunctionResult.insufficient_data()
+    shifted_ctx = context.with_index(past_index)
+    return self.evaluate(node.child, shifted_ctx)
+```
+
+> **Caching Note (CR-001):** The Evaluator's function result cache key must now include `bar_index`.
+> - *Old key:* `(function_name, args)`
+> - *New key:* `(function_name, args, bar_index)`
 
 ---
 

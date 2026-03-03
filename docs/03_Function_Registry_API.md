@@ -127,12 +127,39 @@ class MarketContext:
             LookAheadError: if accessing future bars
         """
         ...
+
+    def with_index(self, new_index: int) -> "MarketContext":
+        """
+        Return a lightweight copy of the context pointing to a different bar.
+        Does NOT copy the data arrays (references are preserved).
+
+        This is the core mechanism for Context Shifting (CR-001).
+        Used by the Evaluator when processing OffsetNode.
+
+        Args:
+            new_index: The target bar index (must be >= 0 and <= bar_index).
+
+        Returns:
+            A new MarketContext with bar_index set to new_index.
+
+        Raises:
+            LookAheadError: if new_index > self.bar_index (future access)
+            ValueError: if new_index < 0
+
+        Performance:
+            O(1) — only the bar_index field is changed; data array
+            references are shared, not copied.
+        """
+        # Implementation: dataclasses.replace(self, bar_index=new_index)
+        ...
 ```
 
 **Critical Safety Features:**
 - `frozen=True` ensures immutability
 - `get_window()` enforces bounds — **no look-ahead bias is possible**
 - Arrays are sliced up to `bar_index` only — future data is never exposed
+- `with_index()` only allows shifting to **past or current** bars — future access raises `LookAheadError` *(CR-001)*
+- **No future peeking:** The `[offset]` grammar syntax only accepts non-negative integers. The Parser rejects negative offsets (e.g., `RSI(14)[-1]`) at parse time, and `with_index()` rejects `new_index > bar_index` at runtime — providing **double-layer protection** against look-ahead bias *(CR-001)*
 
 ### 3.3 `FunctionResult` — Standard Return Type
 
@@ -292,6 +319,7 @@ classDiagram
         +symbol: str
         +timeframe: str
         +get_window(field, lookback) ndarray
+        +with_index(new_index) MarketContext
     }
 
     class FunctionResult {
