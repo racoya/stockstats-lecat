@@ -63,7 +63,14 @@ class DynamicRegistry(FunctionRegistry):
             self._custom_names.add(name)
             loaded += 1
 
-        return loaded
+        # Load Python-based dynamic plugins
+        from lecat.plugin_loader import load_plugins
+        plugins_loaded = load_plugins(self)
+        if plugins_loaded > 0:
+            import logging
+            logging.getLogger("lecat.registry").info(f"Loaded {plugins_loaded} Python plugins.")
+
+        return loaded + plugins_loaded
 
     def reload_custom_indicators(self) -> int:
         """Unregister all custom indicators and reload from DB.

@@ -38,10 +38,9 @@ graph LR
 
     subgraph "Plugin System"
         G["Function Registry<br/><small>Name → Handler Map</small>"]
-        H["RSI Handler"]
-        I["SMA Handler"]
-        J["MACD Handler"]
-        K["... (user-defined)"]
+        H["Built-in Handlers<br/><small>(RSI, SMA, MACD)</small>"]
+        I["Dynamic Python Plugins<br/><small>(lecat_plugins/)</small>"]
+        J["Database Indicators<br/><small>(SQLite Formulas)</small>"]
     end
 
     subgraph "Data Layer"
@@ -52,7 +51,6 @@ graph LR
     G --> H
     G --> I
     G --> J
-    G --> K
     F -->|"reads"| L
     H -->|"reads"| L
     I -->|"reads"| L

@@ -598,6 +598,52 @@ Open the **🛠️ Indicator Manager** tab to create, edit, and delete custom in
 3. Click **🧪 Test** to verify the formula compiles and runs
 4. Click **💾 Save** to persist to the database
 
+---
+
+## 12. Python Plugin System (Complex Math)
+
+For complex mathematical indicators that go beyond the base boolean grammar (e.g., logarithms, arithmetic manipulation, complex stateful formulas), LECAT provides a dynamic Python plugin system.
+
+### Creating a Plugin
+
+1. Navigate to the `lecat_plugins/` directory in the project root.
+2. Create a new Python file (e.g., `math_utils.py`). Files starting with an underscore (`_`) are ignored.
+3. Define a `register_plugin(registry)` function and use the `@registry.register` decorator.
+
+**Example: Half SMA**
+
+```python
+from lecat.context import MarketContext
+from lecat.registry import FunctionRegistry, FunctionResult
+
+def register_plugin(registry: FunctionRegistry) -> None:
+    @registry.register(
+        name="HALF_SMA",
+        description="Returns exactly half of the Simple Moving Average.",
+        arg_schema=[
+            {"name": "period", "type": "integer", "required": True, "default": 20}
+        ],
+        min_bars_required=lambda args: args.get("period", 20),
+    )
+    def half_sma_handler(args: dict, ctx: MarketContext) -> FunctionResult:
+        period = int(args["period"])
+        idx = ctx.bar_index
+
+        if idx < period - 1:
+            return FunctionResult.insufficient_data()
+
+        # Pure Python math
+        window = [float(ctx.close[i]) for i in range(idx - period + 1, idx + 1)]
+        sma = sum(window) / period
+        return FunctionResult.success(sma / 2.0)
+```
+
+### Loading Plugins
+
+Plugins are automatically discovered and loaded when the application starts (e.g., when launching the Streamlit dashboard or running the CLI). Once loaded, they appear in the UI's **Function Reference** tab and can be used identically to built-in indicators in your boolean formulas:
+
+`PRICE > HALF_SMA(20)`
+
 Custom indicators are immediately available in the Strategy Lab and persist across restarts.
 
 ### 8.3 Backing Up the Database
