@@ -6,15 +6,17 @@ import sys
 from PyInstaller.utils.hooks import copy_metadata
 
 # Metadata needed by Streamlit and other libraries
+# Wrapped in try/except — some may not be installed in all environments
 datas = []
-datas += copy_metadata('streamlit')
-datas += copy_metadata('plotly')
-datas += copy_metadata('pandas')
-datas += copy_metadata('tqdm')
-datas += copy_metadata('regex')
-datas += copy_metadata('packaging')
-datas += copy_metadata('altair')
-datas += copy_metadata('jsonschema')
+_metadata_packages = [
+    'streamlit', 'plotly', 'pandas', 'tqdm', 'regex',
+    'packaging', 'altair', 'jsonschema',
+]
+for _pkg in _metadata_packages:
+    try:
+        datas += copy_metadata(_pkg)
+    except Exception:
+        pass  # Skip packages not present in this environment
 
 # Explicitly mapping project files into the bundle
 datas += [
