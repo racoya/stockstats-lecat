@@ -31,6 +31,7 @@ from lecat.backtester import Backtester
 from lecat.context import MarketContext
 from lecat.data_loader import load_from_csv, load_from_lists
 from lecat.evaluator import Evaluator
+from lecat.exporter import load_strategy, strategy_to_json_string
 from lecat.fitness import FitnessResult, calculate_fitness
 from lecat.indicators import register_extended_indicators
 from lecat.lexer import Lexer
@@ -247,6 +248,27 @@ def render_lab_mode(ctx: MarketContext, initial_capital: float):
                 st.session_state["lab_input"] = expr
                 st.rerun()
 
+    # Strategy JSON upload
+    st.markdown("---")
+    uploaded_json = st.file_uploader(
+        "📁 Upload Strategy JSON",
+        type=["json"],
+        help="Upload a previously saved strategy to auto-populate the expression",
+        key="lab_json_upload",
+    )
+    if uploaded_json is not None:
+        try:
+            import json
+            strategy_data = json.loads(uploaded_json.getvalue())
+            if "expression" in strategy_data:
+                st.session_state["lab_expression"] = strategy_data["expression"]
+                st.success(f"✅ Loaded strategy: **{strategy_data.get('name', 'Unknown')}**")
+                st.rerun()
+            else:
+                st.error("Invalid strategy file: missing 'expression' field")
+        except Exception as e:
+            st.error(f"Failed to load strategy: {e}")
+
     if run_clicked:
         st.session_state["lab_expression"] = expression
         _run_lab_backtest(expression, ctx, initial_capital)
@@ -273,6 +295,15 @@ def _run_lab_backtest(expression: str, ctx: MarketContext, initial_capital: floa
 
         # Display metrics
         _render_metrics(fitness, initial_capital)
+
+        # Download strategy button
+        json_str = strategy_to_json_string(expression, fitness)
+        st.download_button(
+            label="💾 Download Strategy (JSON)",
+            data=json_str,
+            file_name=f"strategy_{expression[:20].replace(' ', '_')}.json",
+            mime="application/json",
+        )
 
         # Display chart
         _render_candlestick_chart(result, ctx, expression, fitness)
@@ -528,8 +559,26 @@ def _render_hall_of_fame(ctx: MarketContext, initial_capital: float):
             [h["expression"] for h in hall],
         )
 
-        if selected and st.button("📈 Show Chart", use_container_width=False):
-            _run_lab_backtest(selected, ctx, initial_capital)
+        col_viz, col_dl = st.columns([1, 1])
+        with col_viz:
+            if selected and st.button("📈 Show Chart", use_container_width=True):
+                _run_lab_backtest(selected, ctx, initial_capital)
+        with col_dl:
+            if selected:
+                sel_data = next((h for h in hall if h["expression"] == selected), None)
+                if sel_data:
+                    json_str = strategy_to_json_string(
+                        selected,
+                        sel_data,
+                        name=f"Evolved Strategy #{sel_data.get('rank', 1)}"
+                    )
+                    st.download_button(
+                        "💾 Download Strategy",
+                        data=json_str,
+                        file_name="evolved_strategy.json",
+                        mime="application/json",
+                        use_container_width=True,
+                    )
 
 
 # ------------------------------------------------------------------

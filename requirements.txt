@@ -1,0 +1,21 @@
+# LECAT — Dependencies
+# Install: pip install -r requirements.txt
+
+# Core (standard library only — no install needed for engine)
+
+# Dashboard & Visualization
+streamlit>=1.30.0
+plotly>=5.18.0
+pandas>=2.0.0
+
+# Data Processing
+numpy>=1.24.0
+
+# Configuration
+pyyaml>=6.0
+
+# Charts (static export)
+matplotlib>=3.7.0
+
+# Testing
+pytest>=7.0.0

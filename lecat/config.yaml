@@ -1,0 +1,22 @@
+# LECAT Configuration
+# Edit these values to customize the system behavior.
+
+initial_capital: 10000
+chart_theme: "plotly_dark"
+log_dir: "logs"
+strategies_dir: "strategies"
+
+# Optimizer defaults
+optimizer:
+  population_size: 100
+  generations: 10
+  elite_count: 5
+  mutation_rate: 0.3
+  crossover_rate: 0.7
+  tournament_k: 3
+  max_depth: 3
+
+# Dashboard
+dashboard:
+  port: 8501
+  theme: "dark"

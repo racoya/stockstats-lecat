@@ -24,6 +24,7 @@ RSI(14)[1] > 70 AND (close > open)[1]
 | **Phase 3** — Optimization & Evolution | Sprint 2 — Data & Validation | ✅ Complete |
 | **Phase 3** — Optimization & Evolution | Sprint 3 — Performance & Indicators | ✅ Complete |
 | **Phase 4** — Interface & Deployment | Sprint 1 — Web Dashboard | ✅ Complete |
+| **Phase 4** — Interface & Deployment | Sprint 2 — Persistence & Packaging | ✅ Complete |
 
 ---
 
@@ -104,9 +105,11 @@ stockstats-lecat/
 │   ├── parallel.py           # Multi-core batch evaluation (ThreadPoolExecutor)
 │   ├── data_loader.py        # CSV/DataFrame ingestion into MarketContext
 │   ├── reporting.py          # Equity curve charts and text reports
+│   ├── exporter.py           # Strategy save/load (JSON)
+│   ├── logger.py             # Centralized logging (console + rotating file)
 │   └── dashboard/
 │       └── app.py            # Streamlit web dashboard
-├── tests/                    # Unit tests (220 tests)
+├── tests/                    # Unit tests (235 tests)
 │   ├── test_lexer.py         # Lexer tests (31 tests)
 │   ├── test_parser.py        # Parser tests (39 tests)
 │   ├── test_registry.py      # Registry tests (15 tests)
@@ -118,7 +121,8 @@ stockstats-lecat/
 │   ├── test_data_loader.py   # Data loader tests (12 tests)
 │   ├── test_reporting.py     # Reporting tests (8 tests)
 │   ├── test_indicators.py    # Extended indicator tests (13 tests)
-│   └── test_parallel.py      # Parallel evaluator tests (9 tests)
+│   ├── test_parallel.py      # Parallel evaluator tests (9 tests)
+│   └── test_persistence.py   # Exporter, logger, config tests (15 tests)
 ├── docs/                     # System design documentation (SDD/SRS)
 │   ├── 00_Overview.md
 │   ├── 01_Grammar_Specification.md

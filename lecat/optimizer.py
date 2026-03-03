@@ -28,10 +28,13 @@ from lecat.fitness import FitnessResult, calculate_fitness
 from lecat.generator import ExpressionGenerator
 from lecat.indicators import register_extended_indicators
 from lecat.lexer import Lexer
+from lecat.logger import get_logger
 from lecat.parallel import BatchEvaluator
 from lecat.parser import Parser
 from lecat.registry import FunctionRegistry
 from lecat.std_lib import register_std_lib
+
+logger = get_logger(__name__)
 
 
 @dataclass
@@ -155,16 +158,13 @@ class Optimizer:
         reports: list[GenerationReport] = []
 
         if self._verbose:
-            print(f"\n{'═' * 70}")
-            print(f"  LECAT Evolutionary Optimizer")
-            print(f"{'═' * 70}")
-            print(f"  Population: {self._population_size}  |  Generations: {generations}")
-            print(f"  Elite: {self._elite_count}  |  Mutation: {self._mutation_rate:.0%}")
+            logger.info("Evolution started — Population: %d, Generations: %d", self._population_size, generations)
+            logger.info("Elite: %d, Mutation: %.0f%%", self._elite_count, self._mutation_rate * 100)
             if split_ratio is not None:
-                print(f"  Train: {train_ctx.total_bars:,} bars  |  Test: {test_ctx.total_bars:,} bars  ({split_ratio:.0%}/{1-split_ratio:.0%})")
+                logger.info("Walk-Forward: Train %d bars, Test %d bars (%.0f%%/%.0f%%)",
+                            train_ctx.total_bars, test_ctx.total_bars, split_ratio * 100, (1-split_ratio) * 100)
             else:
-                print(f"  Bars: {self._context.total_bars:,}")
-            print(f"{'═' * 70}\n")
+                logger.info("Bars: %d", self._context.total_bars)
 
         # Step 1: Initialize population
         population = self._init_population()
@@ -236,15 +236,13 @@ class Optimizer:
         total_elapsed = (time.perf_counter() - total_start) * 1000
 
         if self._verbose:
-            print(f"\n{'─' * 70}")
-            print(f"  Best Strategy: {best.expression}")
-            print(f"  Train: {best_fitness}")
+            logger.info("Best Strategy: %s", best.expression)
+            logger.info("Train fitness: %s", best_fitness)
             if walk_forward is not None:
                 wf = walk_forward
-                print(f"  Test:  {wf.test_fitness}")
-                print(f"  Overfit Ratio: {wf.overfit_ratio:.2f} (1.0 = ideal, <1 = overfit)")
-            print(f"  Total time: {total_elapsed:.0f}ms")
-            print(f"{'─' * 70}\n")
+                logger.info("Test fitness: %s", wf.test_fitness)
+                logger.info("Overfit Ratio: %.2f (1.0 = ideal, <1 = overfit)", wf.overfit_ratio)
+            logger.info("Total time: %.0fms", total_elapsed)
 
         return OptimizationResult(
             best_individual=best,
@@ -367,7 +365,7 @@ class Optimizer:
         )
 
     def _print_generation(self, report: GenerationReport) -> None:
-        """Print generation summary."""
+        """Log generation summary."""
         display_expr = report.best_expression
         if len(display_expr) > 45:
             display_expr = display_expr[:42] + "..."
@@ -377,9 +375,8 @@ class Optimizer:
             r = report.best_result
             fitness_detail = f"ret={r.total_return_pct:+.1f}% trades={r.num_trades}"
 
-        print(
-            f"  Gen {report.generation:>3}  |  "
-            f"best={report.best_fitness:>7.4f}  "
-            f"avg={report.avg_fitness:>7.4f}  |  "
-            f"{fitness_detail:<25}  {display_expr}"
+        logger.info(
+            "Gen %3d | best=%7.4f avg=%7.4f | %-25s %s",
+            report.generation, report.best_fitness, report.avg_fitness,
+            fitness_detail, display_expr
         )

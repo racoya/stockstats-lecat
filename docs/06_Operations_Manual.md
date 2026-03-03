@@ -4,53 +4,201 @@
 
 ---
 
-## 1. Installation
+## 1. Getting Started
 
-### 1.1 Prerequisites
+### 1.1 What is LECAT?
 
-- **Python 3.10+** (standard library only for core engine)
-- **Optional:** `streamlit`, `plotly`, `pandas` (for web dashboard)
-- **Optional:** `matplotlib` (for static chart export)
-- **Optional:** `numpy` (for optimized data loading)
+LECAT (**L**ogical **E**xpression **C**ompiler for **A**lgorithmic **T**rading) is a system that lets you write simple trading rules in plain English-like syntax, test them against market data, and automatically discover profitable strategies using a genetic algorithm.
 
-### 1.2 Setup
+**Example:** Instead of writing complex code, you write:
+```
+RSI(14) > 70 AND PRICE > SMA(50)
+```
+This means: *"Buy when RSI is above 70 AND the price is above the 50-period Simple Moving Average."*
 
+### 1.2 System Requirements
+
+| Requirement | Minimum | Recommended |
+|-------------|---------|-------------|
+| Python | 3.10+ | 3.12+ |
+| RAM | 2 GB | 8 GB |
+| CPU Cores | 1 | 4+ (for parallel optimization) |
+| Disk | 50 MB | 200 MB (for logs and saved strategies) |
+| OS | macOS, Linux, Windows | Any |
+
+### 1.3 Installation (Step-by-Step)
+
+**Step 1:** Clone the repository
 ```bash
-# Clone the repository
 git clone <repository-url>
 cd stockstats-lecat
-
-# Install dashboard dependencies (optional)
-pip install streamlit plotly pandas matplotlib numpy
 ```
 
-No build step is required. The core engine uses only Python standard library.
+**Step 2:** Create a virtual environment (recommended)
+```bash
+python3 -m venv venv
+source venv/bin/activate    # macOS/Linux
+# venv\Scripts\activate     # Windows
+```
+
+**Step 3:** Install dependencies
+```bash
+pip install -r requirements.txt
+```
+
+**Step 4:** Verify the installation
+```bash
+python3 -m unittest discover -s tests -v
+```
+You should see `Ran 235 tests ... OK`.
+
+**Step 5:** Launch the dashboard
+```bash
+streamlit run lecat/dashboard/app.py
+```
+Open your browser to `http://localhost:8501`.
 
 ---
 
-## 2. Command Line Interface (CLI)
+## 2. Using the Web Dashboard
 
-### 2.1 Basic Usage — Strategy Generation & Backtest
+The dashboard is the primary way to interact with LECAT. It has three tabs.
+
+### 2.1 Getting Data Into the System
+
+**Option A: Generate Random Data** (for testing/learning)
+1. In the sidebar, select **"Generate Random"**
+2. Choose the number of bars (1000 is a good start)
+3. Set a random seed (42 is fine) for reproducible results
+
+**Option B: Upload Your Own CSV**
+1. In the sidebar, select **"Upload CSV"**
+2. Click **"Browse files"** and select your CSV file
+3. Your CSV must have these columns:
+
+```csv
+Date,Open,High,Low,Close,Volume
+2024-01-01,100.00,110.00,90.00,105.00,1000
+2024-01-02,105.00,115.00,95.00,110.00,1200
+```
+
+> **Flexible headers:** The system accepts many common column name formats:
+> `open`, `Open`, `o` | `high`, `High`, `h` | `low`, `Low`, `l` | `close`, `Close`, `c`, `Adj Close` | `volume`, `Volume`, `vol`, `v`
+
+> **Missing values** are automatically forward-filled (the previous bar's value is used).
+
+### 2.2 Strategy Lab (Tab 1) — Testing Your Ideas
+
+This is where you manually type a trading rule and see how it performs.
+
+**Step 1: Write your strategy**
+
+Type a LECAT expression in the text box. Here are some examples to try:
+
+| Strategy | What It Does |
+|----------|-------------|
+| `RSI(14) > 70` | Signal when RSI indicates overbought |
+| `PRICE > SMA(50)` | Signal when price is above 50-bar average |
+| `MACD(12, 26, 9) > 0` | Signal when MACD histogram is positive |
+| `PRICE > BB_UPPER(20, 2.0)` | Signal on Bollinger Band breakout |
+| `EMA(10) > EMA(50) AND EMA(10)[1] <= EMA(50)[1]` | EMA crossover (current cross above) |
+| `RSI(14) < 30 AND STOCH(14, 3) < 20` | Combined oversold condition |
+
+Or use the **Quick Presets** buttons on the right side.
+
+**Step 2: Click "Run Backtest"**
+
+You'll see:
+- **Metrics row** — Total Return, Sharpe Ratio, Win Rate, # Trades, Max Drawdown, Fitness Score
+- **Interactive chart** — Candlestick with green triangle markers where your strategy signals True. Use your mouse to zoom, pan, and hover for exact values.
+- **Download button** — Save your strategy as a JSON file for later use
+
+**Step 3: Iterate**
+
+Change the expression and click Run again. Compare metrics to find what works.
+
+**Loading a saved strategy:**
+1. Scroll below the presets to find **"📁 Upload Strategy JSON"**
+2. Upload a previously downloaded `.json` file
+3. The expression will auto-populate and you can run it immediately
+
+### 2.3 Evolution Engine (Tab 2) — Automatic Strategy Discovery
+
+This is where LECAT's genetic algorithm creates and evolves strategies automatically.
+
+**Step 1: Configure the parameters**
+
+| Parameter | What It Controls | Recommended Start |
+|-----------|-----------------|-------------------|
+| **Generations** | How many evolution cycles to run | 5–10 |
+| **Population Size** | How many strategies per generation | 50–100 |
+| **Mutation Rate** | Probability of random changes (0.0–1.0) | 0.2–0.4 |
+| **Train/Test Split** | How much data to use for training vs validation | 0.7 (70% train) |
+
+> **Train/Test Split explained:** If you have 1000 bars and set split to 0.7, the optimizer trains on the first 700 bars and validates the best strategy on the last 300 bars. This prevents overfitting — a strategy that only works on historical data it was trained on.
+
+**Step 2: Click "🧬 Start Evolution"**
+
+The optimizer will:
+1. Generate random strategies
+2. Test each one via backtesting
+3. Keep the best performers (elitism)
+4. Create new strategies by combining and mutating the best ones
+5. Repeat for N generations
+
+A progress indicator shows the current status.
+
+**Step 3: Review the Hall of Fame**
+
+After completion, you'll see:
+- **Walk-forward metrics** — Train Sharpe, Test Sharpe, and Overfit Ratio
+  - 🟢 Overfit Ratio > 0.7 = strategy generalizes well
+  - 🔴 Overfit Ratio < 0.7 = may be overfit to training data
+- **Leaderboard table** — Top strategies ranked by fitness
+- **Visualization** — Select any strategy and click "Show Chart" to see it in action
+- **Download** — Save the best strategy as JSON for deployment or sharing
+
+### 2.4 Function Reference (Tab 3)
+
+Lists all available functions with their argument types and default values.
+
+### 2.5 Settings (Sidebar)
+
+| Setting | Description | Default |
+|---------|-------------|---------|
+| Initial Capital | Starting capital for backtest calculations | $10,000 |
+
+---
+
+## 3. Command Line Interface (CLI)
+
+For users who prefer the terminal or want to automate runs.
+
+### 3.1 Simple Backtest Mode
+
+Generate random strategies and test them:
 
 ```bash
-# Generate and test 10 random strategies on 1000 bars
+# Default: 10 strategies, 1000 bars
 python3 -m lecat.main
 
-# Customize parameters
+# Custom parameters
 python3 -m lecat.main --strategies 20 --bars 5000 --depth 3 --seed 42
 ```
 
-### 2.2 Optimizer Mode
+### 3.2 Optimizer Mode
+
+Run the genetic algorithm from the command line:
 
 ```bash
-# Run genetic algorithm for 10 generations
+# 10 generations, 100 strategies per generation
 python3 -m lecat.main --generations 10 --strategies 100 --bars 1000
 
-# With parallel evaluation (4 CPU cores)
+# With parallel processing (4 CPU cores)
 python3 -m lecat.main --generations 10 --strategies 100 --bars 1000 --cores 4
 ```
 
-### 2.3 CLI Arguments
+### 3.3 CLI Argument Reference
 
 | Flag | Short | Default | Description |
 |------|-------|---------|-------------|
@@ -63,156 +211,288 @@ python3 -m lecat.main --generations 10 --strategies 100 --bars 1000 --cores 4
 
 ---
 
-## 3. Web Dashboard
+## 4. Writing Strategies (Expression Language)
 
-### 3.1 Launching
+### 4.1 Basic Structure
 
-```bash
-streamlit run lecat/dashboard/app.py
+Every strategy is a boolean expression — it evaluates to `True` (signal) or `False` (no signal) at each bar.
+
+```
+<left side> <comparison operator> <right side>
 ```
 
-The dashboard opens at `http://localhost:8501`.
-
-### 3.2 Features
-
-#### Strategy Lab (Tab 1)
-1. **Upload Data** — Drag & drop a CSV file, or use the "Generate Random" option
-2. **Enter Expression** — Type a LECAT strategy (e.g., `RSI(14) > 70 AND PRICE > SMA(50)`)
-3. **Run Backtest** — Click to see metrics (Return, Sharpe, Win Rate) and interactive candlestick chart
-4. **Quick Presets** — Use built-in strategy templates
-
-#### Evolution Engine (Tab 2)
-1. **Configure** — Set generations, population size, mutation rate, and train/test split
-2. **Start Evolution** — Run the genetic optimizer with progress indicator
-3. **Hall of Fame** — Browse the top strategies ranked by fitness
-4. **Visualize** — Click any strategy to see its equity curve
-
-#### Function Reference (Tab 3)
-- Browse all available market data accessors and technical indicators
-- View function signatures and argument schemas
-
-### 3.3 CSV File Format
-
-The data loader accepts standard OHLCV CSV files:
-
-```csv
-Date,Open,High,Low,Close,Volume
-2024-01-01,100.00,110.00,90.00,105.00,1000
-2024-01-02,105.00,115.00,95.00,110.00,1200
+Examples:
+```
+PRICE > 100         # Is price above 100?
+RSI(14) > 70        # Is RSI above 70?
+SMA(20) > SMA(50)   # Is short-term average above long-term?
 ```
 
-**Supported column aliases:** `open`/`o`, `high`/`h`, `low`/`l`, `close`/`c`/`adj close`, `volume`/`vol`/`v`
+### 4.2 Comparison Operators
 
-Missing values are automatically forward-filled.
+| Operator | Meaning |
+|----------|---------|
+| `>` | Greater than |
+| `<` | Less than |
+| `>=` | Greater than or equal |
+| `<=` | Less than or equal |
+| `==` | Equal (with epsilon tolerance) |
+| `!=` | Not equal |
+
+### 4.3 Combining Conditions
+
+| Operator | Meaning | Example |
+|----------|---------|---------|
+| `AND` | Both must be true | `RSI(14) > 70 AND PRICE > SMA(50)` |
+| `OR` | Either must be true | `RSI(14) > 80 OR MACD(12,26,9) > 0` |
+| `NOT` | Negate condition | `NOT (RSI(14) > 70)` |
+
+**Precedence:** `NOT` > `AND` > `OR`. Use parentheses to override:
+```
+(RSI(14) > 70 OR MACD(12,26,9) > 0) AND PRICE > SMA(200)
+```
+
+### 4.4 Market Data Accessors
+
+Zero-argument functions that return current bar data:
+
+| Function | Description | Also works as |
+|----------|-------------|---------------|
+| `PRICE` | Current close price | `close` |
+| `OPEN` | Current open price | `open` |
+| `HIGH` | Current high price | `high` |
+| `LOW` | Current low price | `low` |
+| `VOLUME` | Current volume | `volume` |
+
+### 4.5 Technical Indicators
+
+| Indicator | Arguments | Range | Description |
+|-----------|-----------|-------|-------------|
+| `SMA(period)` | period: 1–500 (default: 20) | Price level | Simple Moving Average |
+| `EMA(period)` | period: 1–500 (default: 20) | Price level | Exponential Moving Average (reacts faster) |
+| `RSI(period)` | period: 1–500 (default: 14) | 0–100 | Relative Strength Index (>70 overbought, <30 oversold) |
+| `ATR(period)` | period: 1–500 (default: 14) | Always positive | Average True Range (volatility) |
+| `MACD(fast, slow, signal)` | 2–100, 2–200, 2–50 (12,26,9) | Centered on 0 | MACD Histogram (>0 bullish, <0 bearish) |
+| `BB_UPPER(period, std)` | 2–500, 0.5–5.0 (20, 2.0) | Price level | Bollinger Band Upper (breakout level) |
+| `BB_LOWER(period, std)` | 2–500, 0.5–5.0 (20, 2.0) | Price level | Bollinger Band Lower (support level) |
+| `STOCH(k, d)` | 1–500, 1–50 (14, 3) | 0–100 | Stochastic Oscillator (>80 overbought, <20 oversold) |
+
+### 4.6 Context Shifting (Lookback)
+
+Append `[n]` to any expression to look back `n` bars:
+
+```
+PRICE[1]                     # Yesterday's close price
+RSI(14)[1]                   # RSI from 1 bar ago
+(PRICE > SMA(50))[2]         # Was price above SMA 2 bars ago?
+EMA(10) > EMA(50) AND EMA(10)[1] <= EMA(50)[1]  # Crossover detection
+```
+
+This is powerful for detecting **crossovers** (something changed from False → True).
+
+### 4.7 Strategy Cookbook
+
+Here are battle-tested strategy patterns:
+
+**Trend Following:**
+```
+PRICE > SMA(200) AND RSI(14) > 50
+```
+
+**Mean Reversion:**
+```
+RSI(14) < 30 AND PRICE < BB_LOWER(20, 2.0)
+```
+
+**Momentum Crossover:**
+```
+EMA(10) > EMA(50) AND EMA(10)[1] <= EMA(50)[1]
+```
+
+**MACD + RSI Confirmation:**
+```
+MACD(12, 26, 9) > 0 AND RSI(14) > 50 AND RSI(14) < 80
+```
+
+**Volatility Breakout:**
+```
+PRICE > BB_UPPER(20, 2.0) AND VOLUME > 5000
+```
+
+**Combined Oversold Filter:**
+```
+RSI(14) < 30 AND STOCH(14, 3) < 20 AND MACD(12, 26, 9) > MACD(12, 26, 9)[1]
+```
 
 ---
 
-## 4. Expression Language Reference
+## 5. Strategy Persistence (Save & Load)
 
-### 4.1 Syntax
+### 5.1 Saving from the Dashboard
 
-```
-expression := comparison ((AND | OR) comparison)*
-comparison := primary (> | < | >= | <= | == | !=) primary
-primary    := function_call | identifier | literal | (expression)[offset]
-```
+After running a backtest in the Lab tab, click **"💾 Download Strategy (JSON)"**. The file contains:
 
-### 4.2 Market Data Accessors
-
-| Function | Description |
-|----------|-------------|
-| `PRICE` / `close` | Current bar's close price |
-| `OPEN` / `open` | Current bar's open price |
-| `HIGH` / `high` | Current bar's high price |
-| `LOW` / `low` | Current bar's low price |
-| `VOLUME` / `volume` | Current bar's volume |
-
-### 4.3 Technical Indicators
-
-| Function | Args | Description |
-|----------|------|-------------|
-| `SMA(period)` | period: 1–500 | Simple Moving Average |
-| `EMA(period)` | period: 1–500 | Exponential Moving Average |
-| `RSI(period)` | period: 1–500 | Relative Strength Index (0–100) |
-| `ATR(period)` | period: 1–500 | Average True Range |
-| `MACD(fast, slow, signal)` | 2–100, 2–200, 2–50 | MACD Histogram |
-| `BB_UPPER(period, std_dev)` | 2–500, 0.5–5.0 | Bollinger Band Upper |
-| `BB_LOWER(period, std_dev)` | 2–500, 0.5–5.0 | Bollinger Band Lower |
-| `STOCH(k_period, d_period)` | 1–500, 1–50 | Stochastic Oscillator %D |
-
-### 4.4 Context Shifting (Lookback)
-
-Append `[n]` to shift evaluation back by `n` bars:
-
-```
-RSI(14)[1] > 70    # RSI from 1 bar ago
-(PRICE > SMA(50))[2]  # Was price above SMA 2 bars ago?
+```json
+{
+  "name": "RSI 14 > 70",
+  "expression": "RSI(14) > 70",
+  "metrics": {
+    "sharpe": 0.5432,
+    "return": 12.34,
+    "win_rate": 0.6,
+    "trades": 45,
+    "max_drawdown": -8.5,
+    "fitness": 0.3210
+  },
+  "timestamp": "2026-03-03T12:00:00+00:00",
+  "engine_version": "2.0"
+}
 ```
 
-### 4.5 Example Strategies
+### 5.2 Loading into the Dashboard
 
-```
-RSI(14) > 70 AND PRICE > SMA(200)       # RSI overbought + uptrend
-MACD(12, 26, 9) > 0 AND RSI(14) < 80    # MACD bullish + not overbought
-PRICE > BB_UPPER(20, 2.0)               # Bollinger breakout
-EMA(10) > EMA(50) AND EMA(10)[1] <= EMA(50)[1]  # EMA crossover
+1. Go to the **Strategy Lab** tab
+2. Find the **"📁 Upload Strategy JSON"** uploader
+3. Drop or browse for your `.json` file
+4. The expression auto-populates — click **Run Backtest** to test
+
+### 5.3 Programmatic Save/Load
+
+```python
+from lecat.exporter import save_strategy, load_strategy
+
+# Save
+save_strategy(
+    expression="RSI(14) > 70 AND PRICE > SMA(50)",
+    metrics={"sharpe": 1.5, "return": 25.0},
+    name="My Strategy v1",
+    filepath="strategies/my_strategy.json"
+)
+
+# Load
+data = load_strategy("strategies/my_strategy.json")
+print(data["expression"])  # "RSI(14) > 70 AND PRICE > SMA(50)"
 ```
 
 ---
 
-## 5. Running Tests
+## 6. Configuration
+
+### 6.1 config.yaml
+
+The file `lecat/config.yaml` controls default system settings:
+
+```yaml
+initial_capital: 10000       # Starting capital for backtests
+chart_theme: "plotly_dark"    # Dashboard chart theme
+log_dir: "logs"               # Where log files are stored
+strategies_dir: "strategies"  # Where strategies are saved
+
+optimizer:                    # Default optimizer settings
+  population_size: 100
+  generations: 10
+  mutation_rate: 0.3
+
+dashboard:
+  port: 8501
+  theme: "dark"
+```
+
+Edit this file to change defaults. Requires PyYAML (`pip install pyyaml`).
+
+### 6.2 Environment Variables
+
+No environment variables are required. All configuration is via `config.yaml` or CLI flags.
+
+---
+
+## 7. Logging
+
+### 7.1 Log Location
+
+Logs are written to `logs/lecat.log` (auto-created).
+
+### 7.2 Log Levels
+
+- **Console:** Shows `INFO` and above
+- **File:** Records `DEBUG` and above (much more detail)
+- **Rotation:** 10 MB max file size, keeps 5 backups
+
+### 7.3 Reading Logs
 
 ```bash
-# Run all tests
+# View latest logs
+tail -f logs/lecat.log
+
+# Search for specific events
+grep "Generation" logs/lecat.log
+grep "Best Strategy" logs/lecat.log
+```
+
+Example log output:
+```
+2026-03-03 12:00:00 - lecat.optimizer - INFO - Evolution started — Population: 100, Generations: 10
+2026-03-03 12:00:01 - lecat.optimizer - INFO - Gen   1 | best= 0.3210 avg= 0.0150 | ret=+12.3% trades=45       RSI(14) > 70 AND PRICE > SMA(50)
+2026-03-03 12:00:05 - lecat.optimizer - INFO - Best Strategy: RSI(14) > 70 AND PRICE > SMA(50)
+```
+
+---
+
+## 8. Running Tests
+
+```bash
+# Run all 235 tests
 python3 -m unittest discover -s tests -v
 
-# Run specific test modules
+# Run a specific test module
 python3 -m unittest tests.test_lexer -v
 python3 -m unittest tests.test_indicators -v
+python3 -m unittest tests.test_persistence -v
+
+# Run tests matching a pattern
+python3 -m unittest tests.test_indicators.TestMACDIndicator -v
 ```
 
-Current test count: **220 tests** across 12 test files.
+### 8.1 Test File Index
+
+| File | Tests | Coverage |
+|------|-------|----------|
+| `test_lexer.py` | 31 | Tokenizer (numbers, strings, operators) |
+| `test_parser.py` | 39 | Parser (AST construction, error handling, context shifting) |
+| `test_registry.py` | 15 | Function registration and lookup |
+| `test_evaluator.py` | 41 | AST evaluation, caching, boolean logic |
+| `test_generator.py` | 10 | Random expression generation |
+| `test_backtester.py` | 14 | Signal loop, trade execution |
+| `test_fitness.py` | 10 | PnL, Sharpe, drawdown calculations |
+| `test_evolution.py` | 18 | Mutation, crossover, selection |
+| `test_data_loader.py` | 12 | CSV loading, column aliases, splitting |
+| `test_reporting.py` | 8 | Chart generation, equity curves |
+| `test_indicators.py` | 13 | MACD, Bollinger, Stochastic correctness |
+| `test_parallel.py` | 9 | Parallel vs serial reproducibility |
+| `test_persistence.py` | 15 | JSON export/import, logger, config |
 
 ---
 
-## 6. Project Structure
+## 9. Troubleshooting
 
-```
-stockstats-lecat/
-├── lecat/                 # Core engine
-│   ├── lexer.py           # Tokenizer
-│   ├── parser.py          # Recursive descent parser
-│   ├── ast_nodes.py       # Immutable AST nodes
-│   ├── evaluator.py       # Tree-walking evaluator
-│   ├── context.py         # MarketContext (OHLCV data)
-│   ├── registry.py        # Function plugin registry
-│   ├── std_lib.py         # Built-in indicators
-│   ├── indicators.py      # Extended indicators
-│   ├── generator.py       # Random expression generator
-│   ├── backtester.py      # Backtesting engine
-│   ├── fitness.py         # Fitness scoring
-│   ├── evolution.py       # Genetic operators
-│   ├── optimizer.py       # GA loop
-│   ├── parallel.py        # Multi-core evaluation
-│   ├── data_loader.py     # CSV ingestion
-│   ├── reporting.py       # Chart generation
-│   ├── cache.py           # Indicator caching
-│   ├── main.py            # CLI entry point
-│   └── dashboard/
-│       └── app.py         # Streamlit web dashboard
-├── tests/                 # 220 unit tests
-├── docs/                  # Documentation (SDD/SRS)
-└── README.md
-```
+### Common Issues
 
----
+| Problem | Cause | Solution |
+|---------|-------|----------|
+| `ModuleNotFoundError: streamlit` | Dependencies not installed | Run `pip install -r requirements.txt` |
+| `ModuleNotFoundError: plotly` | Missing visualization lib | Run `pip install plotly` |
+| Dashboard blank after upload | CSV format issue | Check column names match §2.1; ensure no empty rows |
+| `ParserError: Chained comparison` | `A > B > C` is not allowed | Rewrite as `A > B AND B > C` |
+| `InsufficientData` | Indicator needs more bars | Increase data size or reduce indicator period |
+| `EvaluationError: Unknown identifier` | Typo in function name | Check spelling; use Function Reference tab |
+| Strategy returns are NaN | No trades triggered | Try a less restrictive condition |
+| Dashboard won't launch | Port in use | `streamlit run lecat/dashboard/app.py --server.port 8502` |
+| Optimizer takes too long | Large population/generations | Reduce pop size, use `--cores 4` for parallel |
+| Log file not created | Permission issue | Check `logs/` directory is writable |
 
-## 7. Troubleshooting
+### Getting Help
 
-| Issue | Solution |
-|-------|----------|
-| `ModuleNotFoundError: streamlit` | Run `pip install streamlit plotly pandas` |
-| `ParserError: Chained comparison` | LECAT doesn't allow `A > B > C`; use `A > B AND B > C` |
-| `InsufficientDataError` | Indicator needs more bars than available; increase data size |
-| `NaN in data` | Check CSV for missing values; loader forward-fills automatically |
-| Dashboard won't start | Ensure port 8501 is free; try `streamlit run lecat/dashboard/app.py --server.port 8502` |
+1. Check the **Function Reference** tab in the dashboard for correct syntax
+2. Start with **Quick Presets** and modify from there
+3. Review `logs/lecat.log` for detailed error messages
+4. Run tests to verify installation: `python3 -m unittest discover -s tests`
