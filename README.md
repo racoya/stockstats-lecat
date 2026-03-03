@@ -19,6 +19,7 @@ RSI(14)[1] > 70 AND (close > open)[1]
 | **Phase 1** — Requirements & Specification | — | ✅ Complete |
 | **Phase 2** — Core Implementation | Sprint 1 — Compiler Frontend | ✅ Complete |
 | **Phase 2** — Core Implementation | Sprint 2 — Evaluator & Registry | ✅ Complete |
+| **Phase 2** — Core Implementation | Sprint 3 — Backtester & Generator | ✅ Complete |
 
 ---
 
@@ -64,6 +65,12 @@ print(f"Signal: {result.value}")  # 1.0 (True) or 0.0 (False)
 python3 -m unittest discover -s tests -v
 ```
 
+### CLI — Generate & Backtest
+
+```bash
+python3 -m lecat.main --strategies 10 --bars 5000 --depth 3 --seed 42
+```
+
 ---
 
 ## Project Structure
@@ -80,12 +87,18 @@ stockstats-lecat/
 │   ├── context.py            # MarketContext (OHLCV data + bar position)
 │   ├── registry.py           # FunctionRegistry with @register decorator
 │   ├── evaluator.py          # Tree-walking AST evaluator
-│   └── std_lib.py            # Built-in indicators (PRICE, SMA, EMA, RSI, ATR)
-├── tests/                    # Unit tests (126 tests)
+│   ├── std_lib.py            # Built-in indicators (PRICE, SMA, EMA, RSI, ATR)
+│   ├── generator.py          # Random expression generator
+│   ├── backtester.py         # Time-loop backtesting engine
+│   ├── stats.py              # Signal statistics and metrics
+│   └── main.py               # CLI entry point
+├── tests/                    # Unit tests (150 tests)
 │   ├── test_lexer.py         # Lexer tests (31 tests)
 │   ├── test_parser.py        # Parser tests (39 tests)
 │   ├── test_registry.py      # Registry tests (15 tests)
-│   └── test_evaluator.py     # Evaluator tests (41 tests)
+│   ├── test_evaluator.py     # Evaluator tests (41 tests)
+│   ├── test_generator.py     # Generator tests (10 tests)
+│   └── test_backtester.py    # Backtester tests (14 tests)
 ├── docs/                     # System design documentation (SDD/SRS)
 │   ├── 00_Overview.md
 │   ├── 01_Grammar_Specification.md
