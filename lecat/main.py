@@ -20,6 +20,7 @@ from lecat.backtester import Backtester
 from lecat.context import MarketContext
 from lecat.evaluator import Evaluator
 from lecat.generator import ExpressionGenerator
+from lecat.indicators import register_extended_indicators
 from lecat.lexer import Lexer
 from lecat.parser import Parser
 from lecat.registry import FunctionRegistry
@@ -99,6 +100,7 @@ def run_cycle(
     # Initialize
     registry = FunctionRegistry()
     register_std_lib(registry)
+    register_extended_indicators(registry)
     evaluator = Evaluator(registry)
     backtester = Backtester(evaluator, registry)
     generator = ExpressionGenerator(registry, max_depth=max_depth, seed=seed)
@@ -182,14 +184,38 @@ def main() -> None:
         type=int, default=None,
         help="Random seed for reproducibility",
     )
+    parser.add_argument(
+        "--cores", "-c",
+        type=int, default=1,
+        help="Number of CPU workers for parallel evaluation (default: 1)",
+    )
+    parser.add_argument(
+        "--generations", "-g",
+        type=int, default=0,
+        help="Run optimizer for N generations instead of simple backtest (default: 0 = off)",
+    )
 
     args = parser.parse_args()
-    run_cycle(
-        num_strategies=args.strategies,
-        num_bars=args.bars,
-        max_depth=args.depth,
-        seed=args.seed,
-    )
+
+    if args.generations > 0:
+        # Run optimizer mode
+        from lecat.optimizer import Optimizer
+        context = generate_random_ohlcv(args.bars, seed=args.seed)
+        optimizer = Optimizer(
+            context,
+            population_size=args.strategies,
+            seed=args.seed,
+            use_parallel=args.cores > 1,
+            max_workers=args.cores if args.cores > 1 else None,
+        )
+        optimizer.run(generations=args.generations)
+    else:
+        run_cycle(
+            num_strategies=args.strategies,
+            num_bars=args.bars,
+            max_depth=args.depth,
+            seed=args.seed,
+        )
 
 
 if __name__ == "__main__":

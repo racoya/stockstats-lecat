@@ -22,6 +22,7 @@ RSI(14)[1] > 70 AND (close > open)[1]
 | **Phase 2** — Core Implementation | Sprint 3 — Backtester & Generator | ✅ Complete |
 | **Phase 3** — Optimization & Evolution | Sprint 1 — Genetic Engine | ✅ Complete |
 | **Phase 3** — Optimization & Evolution | Sprint 2 — Data & Validation | ✅ Complete |
+| **Phase 3** — Optimization & Evolution | Sprint 3 — Performance & Indicators | ✅ Complete |
 
 ---
 
@@ -90,16 +91,19 @@ stockstats-lecat/
 │   ├── registry.py           # FunctionRegistry with @register decorator
 │   ├── evaluator.py          # Tree-walking AST evaluator
 │   ├── std_lib.py            # Built-in indicators (PRICE, SMA, EMA, RSI, ATR)
+│   ├── indicators.py         # Extended indicators (MACD, BB_UPPER, BB_LOWER, STOCH)
+│   ├── cache.py              # Cross-bar indicator memoization
 │   ├── generator.py          # Random expression generator
 │   ├── backtester.py         # Time-loop backtesting engine
 │   ├── stats.py              # Signal statistics and metrics
-│   ├── main.py               # CLI entry point
+│   ├── main.py               # CLI entry point (--cores, --generations)
 │   ├── fitness.py            # PnL, Sharpe Ratio, fitness scoring
 │   ├── evolution.py          # Genetic operators (mutation, crossover, selection)
-│   ├── optimizer.py          # GA loop with walk-forward validation
+│   ├── optimizer.py          # GA loop with walk-forward + parallel eval
+│   ├── parallel.py           # Multi-core batch evaluation (ThreadPoolExecutor)
 │   ├── data_loader.py        # CSV/DataFrame ingestion into MarketContext
 │   └── reporting.py          # Equity curve charts and text reports
-├── tests/                    # Unit tests (198 tests)
+├── tests/                    # Unit tests (220 tests)
 │   ├── test_lexer.py         # Lexer tests (31 tests)
 │   ├── test_parser.py        # Parser tests (39 tests)
 │   ├── test_registry.py      # Registry tests (15 tests)
@@ -109,7 +113,9 @@ stockstats-lecat/
 │   ├── test_fitness.py       # Fitness tests (10 tests)
 │   ├── test_evolution.py     # Evolution tests (18 tests)
 │   ├── test_data_loader.py   # Data loader tests (12 tests)
-│   └── test_reporting.py     # Reporting tests (8 tests)
+│   ├── test_reporting.py     # Reporting tests (8 tests)
+│   ├── test_indicators.py    # Extended indicator tests (13 tests)
+│   └── test_parallel.py      # Parallel evaluator tests (9 tests)
 ├── docs/                     # System design documentation (SDD/SRS)
 │   ├── 00_Overview.md
 │   ├── 01_Grammar_Specification.md

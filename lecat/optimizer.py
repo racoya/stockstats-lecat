@@ -26,7 +26,9 @@ from lecat.evaluator import Evaluator
 from lecat.evolution import Individual, crossover, mutate, tournament_selection
 from lecat.fitness import FitnessResult, calculate_fitness
 from lecat.generator import ExpressionGenerator
+from lecat.indicators import register_extended_indicators
 from lecat.lexer import Lexer
+from lecat.parallel import BatchEvaluator
 from lecat.parser import Parser
 from lecat.registry import FunctionRegistry
 from lecat.std_lib import register_std_lib
@@ -97,6 +99,8 @@ class Optimizer:
         max_depth: int = DEFAULT_MAX_DEPTH,
         seed: int | None = None,
         verbose: bool = True,
+        use_parallel: bool = False,
+        max_workers: int | None = None,
     ) -> None:
         self._context = context
         self._population_size = population_size
@@ -107,15 +111,20 @@ class Optimizer:
         self._max_depth = max_depth
         self._verbose = verbose
         self._rng = random.Random(seed)
+        self._use_parallel = use_parallel
 
         # Initialize components
         self._registry = FunctionRegistry()
         register_std_lib(self._registry)
+        register_extended_indicators(self._registry)
         self._evaluator = Evaluator(self._registry)
         self._backtester = Backtester(self._evaluator, self._registry)
         self._generator = ExpressionGenerator(
             self._registry, max_depth=max_depth, seed=seed
         )
+
+        # Parallel evaluator
+        self._batch_evaluator = BatchEvaluator(max_workers=max_workers) if use_parallel else None
 
     def run(
         self,
@@ -278,8 +287,16 @@ class Optimizer:
 
         Uses _train_context (which may be a subset of the full data
         when walk-forward validation is active).
+        Uses parallel evaluation when enabled.
         """
         ctx = self._train_context
+
+        if self._batch_evaluator is not None and len(population) >= 10:
+            self._batch_evaluator.evaluate_population(
+                population, ctx, self._registry
+            )
+            return
+
         for ind in population:
             try:
                 result = self._backtester.run(
