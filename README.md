@@ -7,16 +7,76 @@ A high-performance **Domain-Specific Language (DSL) compiler** for evaluating bo
 ```
 RSI(14) > 80 AND PRICE > SMA(50)
 NOT (VOLUME < SMA_VOL(20)) OR MACD(12, 26, 9) > 0
+RSI(14)[1] > 70 AND (close > open)[1]
 ```
 
 ---
 
 ## Project Status
 
-| Phase | Status |
-|-------|--------|
-| **Phase 1** — Requirements & Specification | ✅ Complete |
-| **Phase 2** — Core Implementation | 🔲 Not started |
+| Phase | Sprint | Status |
+|-------|--------|--------|
+| **Phase 1** — Requirements & Specification | — | ✅ Complete |
+| **Phase 2** — Core Implementation | Sprint 1 — Compiler Frontend | ✅ Complete |
+| **Phase 2** — Core Implementation | Sprint 2 — Evaluator & Registry | 🔲 Not started |
+
+---
+
+## Quick Start
+
+**Requirements:** Python 3.10+, standard library only (no external dependencies).
+
+```python
+from lecat.lexer import Lexer
+from lecat.parser import Parser
+
+# Parse a trading strategy expression
+source = "RSI(14) > 80 AND PRICE > SMA(50)"
+tokens = Lexer(source).tokenize()
+ast = Parser(tokens).parse()
+
+print(ast)
+# BinaryOpNode(operator='AND',
+#   left=ComparisonNode(operator='>',
+#     left=FunctionCallNode(name='RSI', arguments=(LiteralNode(value=14, ...),)),
+#     right=LiteralNode(value=80, ...)),
+#   right=ComparisonNode(operator='>',
+#     left=IdentifierNode(name='PRICE'),
+#     right=FunctionCallNode(name='SMA', arguments=(LiteralNode(value=50, ...),))))
+```
+
+### Running Tests
+
+```bash
+python3 -m unittest discover -s tests -v
+```
+
+---
+
+## Project Structure
+
+```
+stockstats-lecat/
+├── lecat/                    # Core compiler package
+│   ├── __init__.py
+│   ├── errors.py             # LexerError, ParserError exception hierarchy
+│   ├── tokens.py             # TokenType enum, Token dataclass
+│   ├── ast_nodes.py          # Immutable AST node dataclasses (frozen=True)
+│   ├── lexer.py              # Tokenizer — string → token stream
+│   └── parser.py             # Recursive descent parser — tokens → AST
+├── tests/                    # Unit tests (70 tests)
+│   ├── test_lexer.py         # Lexer tests (31 tests)
+│   └── test_parser.py        # Parser tests (39 tests)
+├── docs/                     # System design documentation (SDD/SRS)
+│   ├── 00_Overview.md
+│   ├── 01_Grammar_Specification.md
+│   ├── 02_System_Architecture.md
+│   ├── 03_Function_Registry_API.md
+│   ├── 04_Error_Handling.md
+│   └── 05_Integration_Strategy.md
+├── README.md
+└── LICENSE
+```
 
 ---
 

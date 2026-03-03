@@ -1,0 +1,103 @@
+racoya@Rodneys-MacBook-Pro stockstats-lecat % python -m pytest tests/ -v 2>&1
+zsh: command not found: python
+racoya@Rodneys-MacBook-Pro stockstats-lecat % python3 -m pytest tests/ -v 2>&1
+/opt/homebrew/opt/python@3.14/bin/python3.14: No module named pytest
+racoya@Rodneys-MacBook-Pro stockstats-lecat % python3 -m unittest discover -s tests -v 2>&1
+test_boolean_false (test_lexer.TestLexerBasics.test_boolean_false) ... ok
+test_boolean_true (test_lexer.TestLexerBasics.test_boolean_true) ... ok
+test_float_literal (test_lexer.TestLexerBasics.test_float_literal) ... ok
+test_identifier (test_lexer.TestLexerBasics.test_identifier) ... ok
+test_identifier_preserves_case (test_lexer.TestLexerBasics.test_identifier_preserves_case) ... ok
+test_integer_literal (test_lexer.TestLexerBasics.test_integer_literal) ... ok
+test_eof_always_appended (test_lexer.TestLexerErrors.test_eof_always_appended) ... ok
+test_max_length_exceeded (test_lexer.TestLexerErrors.test_max_length_exceeded) ... ok
+test_trailing_dot (test_lexer.TestLexerErrors.test_trailing_dot) ... ok
+test_unrecognized_character (test_lexer.TestLexerErrors.test_unrecognized_character) ... ok
+test_compound_and (test_lexer.TestLexerFullExpressions.test_compound_and)
+RSI(14) > 80 AND PRICE > SMA(50) ... ok
+test_context_shifting (test_lexer.TestLexerFullExpressions.test_context_shifting)
+RSI(14)[1] > 70 ... ok
+test_multi_arg_function (test_lexer.TestLexerFullExpressions.test_multi_arg_function)
+MACD(12, 26, 9) ... ok
+test_rsi_comparison (test_lexer.TestLexerFullExpressions.test_rsi_comparison)
+RSI(14) > 80 ... ok
+test_whitespace_is_ignored (test_lexer.TestLexerFullExpressions.test_whitespace_is_ignored)
+Tabs and spaces should be skipped. ... ok
+test_and_keyword (test_lexer.TestLexerKeywords.test_and_keyword) ... ok
+test_case_insensitive_and (test_lexer.TestLexerKeywords.test_case_insensitive_and) ... ok
+test_case_insensitive_or (test_lexer.TestLexerKeywords.test_case_insensitive_or) ... ok
+test_case_insensitive_true (test_lexer.TestLexerKeywords.test_case_insensitive_true) ... ok
+test_not_keyword (test_lexer.TestLexerKeywords.test_not_keyword) ... ok
+test_or_keyword (test_lexer.TestLexerKeywords.test_or_keyword) ... ok
+test_eq (test_lexer.TestLexerOperators.test_eq) ... ok
+test_gt (test_lexer.TestLexerOperators.test_gt) ... ok
+test_gte (test_lexer.TestLexerOperators.test_gte) ... ok
+test_lt (test_lexer.TestLexerOperators.test_lt) ... ok
+test_lte (test_lexer.TestLexerOperators.test_lte) ... ok
+test_neq (test_lexer.TestLexerOperators.test_neq) ... ok
+test_brackets (test_lexer.TestLexerPunctuation.test_brackets) ... ok
+test_comma (test_lexer.TestLexerPunctuation.test_comma) ... ok
+test_minus (test_lexer.TestLexerPunctuation.test_minus) ... ok
+test_parentheses (test_lexer.TestLexerPunctuation.test_parentheses) ... ok
+test_case_a_basic_logic (test_parser.TestAcceptanceCriteria.test_case_a_basic_logic)
+Case A: RSI(14) > 80 AND PRICE > SMA(50) ... ok
+test_case_b_context_shifting (test_parser.TestAcceptanceCriteria.test_case_b_context_shifting)
+Case B: (close > open)[1] ... ok
+test_case_c_precedence (test_parser.TestAcceptanceCriteria.test_case_c_precedence)
+Case C: A OR B AND C ... ok
+test_case_d_negative_offset_error (test_parser.TestAcceptanceCriteria.test_case_d_negative_offset_error)
+Case D: RSI(14)[-1] ... ok
+test_and (test_parser.TestBinaryOperators.test_and) ... ok
+test_and_binds_tighter_than_or (test_parser.TestBinaryOperators.test_and_binds_tighter_than_or)
+A OR B AND C → OR(A, AND(B, C)) ... ok
+test_chained_and (test_parser.TestBinaryOperators.test_chained_and)
+A AND B AND C → AND(AND(A, B), C) (left-associative) ... ok
+test_or (test_parser.TestBinaryOperators.test_or) ... ok
+test_parentheses_override_precedence (test_parser.TestBinaryOperators.test_parentheses_override_precedence)
+(A OR B) AND C → AND(OR(A, B), C) ... ok
+test_all_operators (test_parser.TestComparisons.test_all_operators) ... ok
+test_chained_comparison_error (test_parser.TestComparisons.test_chained_comparison_error)
+A > B > C should raise ParserError (non-associative). ... ok
+test_ema_crossover_with_offset (test_parser.TestComplexExpressions.test_ema_crossover_with_offset)
+EMA(10) > EMA(50) AND EMA(10)[1] <= EMA(50)[1] ... ok
+test_full_strategy (test_parser.TestComplexExpressions.test_full_strategy)
+NOT (VOLUME < SMA_VOL(20)) OR MACD(12, 26, 9) > 0 ... ok
+test_immutability (test_parser.TestComplexExpressions.test_immutability)
+AST nodes must be immutable (frozen=True). ... ok
+test_float_offset_error (test_parser.TestContextShifting.test_float_offset_error) ... ok
+test_function_offset (test_parser.TestContextShifting.test_function_offset)
+RSI(14)[1] → OffsetNode wrapping FunctionCallNode ... ok
+test_grouped_expression_offset (test_parser.TestContextShifting.test_grouped_expression_offset)
+(close > open)[1] ... ok
+test_identifier_offset (test_parser.TestContextShifting.test_identifier_offset)
+PRICE[5] → OffsetNode wrapping IdentifierNode ... ok
+test_negative_offset_error (test_parser.TestContextShifting.test_negative_offset_error) ... ok
+test_offset_in_larger_expression (test_parser.TestContextShifting.test_offset_in_larger_expression)
+RSI(14)[1] > 70 AND PRICE > SMA(50) ... ok
+test_zero_offset (test_parser.TestContextShifting.test_zero_offset)
+RSI(14)[0] — no-op, but valid ... ok
+test_multiple_args (test_parser.TestFunctionCalls.test_multiple_args) ... ok
+test_nested_function_call (test_parser.TestFunctionCalls.test_nested_function_call)
+SMA(RSI(14)) — function as argument. ... ok
+test_no_args (test_parser.TestFunctionCalls.test_no_args) ... ok
+test_single_arg (test_parser.TestFunctionCalls.test_single_arg) ... ok
+test_identifier_preserves_case (test_parser.TestIdentifiers.test_identifier_preserves_case) ... ok
+test_simple_identifier (test_parser.TestIdentifiers.test_simple_identifier) ... ok
+test_boolean_false (test_parser.TestLiterals.test_boolean_false) ... ok
+test_boolean_true (test_parser.TestLiterals.test_boolean_true) ... ok
+test_float (test_parser.TestLiterals.test_float) ... ok
+test_integer (test_parser.TestLiterals.test_integer) ... ok
+test_empty_expression (test_parser.TestParserErrors.test_empty_expression) ... ok
+test_trailing_tokens (test_parser.TestParserErrors.test_trailing_tokens) ... ok
+test_unexpected_token (test_parser.TestParserErrors.test_unexpected_token) ... ok
+test_unmatched_lparen (test_parser.TestParserErrors.test_unmatched_lparen) ... ok
+test_unmatched_rparen (test_parser.TestParserErrors.test_unmatched_rparen) ... ok
+test_double_not (test_parser.TestUnaryOperators.test_double_not) ... ok
+test_not (test_parser.TestUnaryOperators.test_not) ... ok
+test_unary_minus (test_parser.TestUnaryOperators.test_unary_minus) ... ok
+
+----------------------------------------------------------------------
+Ran 70 tests in 0.001s
+
+OK
+racoya@Rodneys-MacBook-Pro stockstats-lecat % 
