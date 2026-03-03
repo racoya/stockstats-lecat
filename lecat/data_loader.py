@@ -139,6 +139,53 @@ def load_from_lists(
     )
 
 
+from typing import Union
+
+def load_from_db(
+    symbol: str,
+    timeframe: str = "1D",
+    db_path: Union[str, Path, None] = None,
+) -> MarketContext:
+    """Load OHLCV data from the SQLite database.
+
+    Args:
+        symbol: Ticker symbol to load (e.g., "BTC_USD").
+        timeframe: Candle timeframe (default "1D").
+        db_path: Optional path to database file. Uses default if None.
+
+    Returns:
+        MarketContext with loaded data.
+
+    Raises:
+        ValueError: If no data found for the symbol.
+    """
+    from lecat.repository import Repository
+
+    repo = Repository(db_path)
+    rows = repo.get_market_data(symbol, timeframe)
+
+    if not rows:
+        raise ValueError(f"No data found for symbol '{symbol}' (timeframe={timeframe})")
+
+    opens = [float(r["open"]) for r in rows]
+    highs = [float(r["high"]) for r in rows]
+    lows = [float(r["low"]) for r in rows]
+    closes = [float(r["close"]) for r in rows]
+    volumes = [float(r["volume"]) for r in rows]
+
+    return MarketContext(
+        open=opens,
+        high=highs,
+        low=lows,
+        close=closes,
+        volume=volumes,
+        bar_index=len(closes) - 1,
+        symbol=symbol,
+        timeframe=timeframe,
+    )
+
+
+
 # ------------------------------------------------------------------
 # Internal helpers
 # ------------------------------------------------------------------

@@ -556,6 +556,8 @@ lecat --generations 10 --strategies 100 --cores 4
 | Optimizer takes too long | Large population/generations | Reduce pop size, use `--cores 4` for parallel |
 | Log file not created | Permission issue | Check `logs/` directory is writable |
 | `pip install .` fails | Missing setuptools | Run `pip install setuptools wheel` first |
+| Custom indicator error | Invalid formula | Test formula in Lab first; must be a valid boolean LECAT expression |
+| Database not found | DB not initialized | The `lecat.db` file is auto-created on first use |
 
 ### Getting Help
 
@@ -564,3 +566,51 @@ lecat --generations 10 --strategies 100 --cores 4
 3. Review `logs/lecat.log` for detailed error messages
 4. Run tests to verify installation: `make test` or `python3 -m unittest discover -s tests`
 5. Check the [README](../README.md) for architecture overview and quickstart
+
+---
+
+## 8. Database Management
+
+LECAT uses a SQLite database (`lecat.db`) to persist market data, custom indicators, and optimization history.
+
+### 8.1 Data Sources
+
+The dashboard sidebar offers three data sources:
+
+| Source | Description |
+|--------|-------------|
+| **Upload CSV** | Upload OHLCV files; optionally save to database |
+| **Database** | Load previously saved datasets from SQLite |
+| **Generate Random** | Synthetic data for testing |
+
+When uploading a CSV with **"Save to database"** checked, the data is persisted and available under "Database" on subsequent visits.
+
+### 8.2 Managing Custom Indicators
+
+Open the **🛠️ Indicator Manager** tab to create, edit, and delete custom indicators:
+
+1. Click **➕ New Indicator** (or select an existing one from the left panel)
+2. Fill in the fields:
+   - **Name:** Uppercase identifier (e.g., `MY_CROSS`)
+   - **Arguments:** Comma-separated parameter names (leave blank for none)
+   - **Formula:** Valid LECAT boolean expression (e.g., `SMA(fast) > SMA(slow)`)
+   - **Description:** Optional human-readable description
+3. Click **🧪 Test** to verify the formula compiles and runs
+4. Click **💾 Save** to persist to the database
+
+Custom indicators are immediately available in the Strategy Lab and persist across restarts.
+
+### 8.3 Backing Up the Database
+
+```bash
+# Create a timestamped backup
+cp lecat.db lecat_backup_$(date +%Y%m%d).db
+
+# Restore from backup
+cp lecat_backup_20260303.db lecat.db
+```
+
+### 8.4 Schema Reference
+
+See [07_Database_Schema.md](./07_Database_Schema.md) for full table definitions.
+

@@ -29,8 +29,9 @@ from plotly.subplots import make_subplots
 
 from lecat.backtester import Backtester
 from lecat.context import MarketContext
-from lecat.data_loader import load_from_csv, load_from_lists
+from lecat.data_loader import load_from_csv, load_from_db, load_from_lists
 from lecat.evaluator import Evaluator
+from lecat.dynamic_registry import DynamicRegistry
 from lecat.exporter import load_strategy, strategy_to_json_string
 from lecat.fitness import FitnessResult, calculate_fitness
 from lecat.indicators import register_extended_indicators
@@ -39,6 +40,7 @@ from lecat.main import generate_random_ohlcv
 from lecat.optimizer import Optimizer
 from lecat.parser import Parser
 from lecat.registry import FunctionRegistry
+from lecat.repository import Repository
 from lecat.std_lib import register_std_lib
 
 
@@ -482,13 +484,23 @@ st.markdown(f"""
 # Registry singleton
 # ------------------------------------------------------------------
 
-@st.cache_resource
-def get_registry() -> FunctionRegistry:
-    """Create and cache the function registry."""
-    reg = FunctionRegistry()
-    register_std_lib(reg)
-    register_extended_indicators(reg)
-    return reg
+def get_repository() -> Repository:
+    """Get the shared repository instance."""
+    if "repository" not in st.session_state:
+        st.session_state["repository"] = Repository()
+    return st.session_state["repository"]
+
+
+def get_registry() -> DynamicRegistry:
+    """Create and cache the dynamic function registry."""
+    if "registry" not in st.session_state:
+        repo = get_repository()
+        reg = DynamicRegistry(repo)
+        register_std_lib(reg)
+        register_extended_indicators(reg)
+        reg.load_custom_indicators()
+        st.session_state["registry"] = reg
+    return st.session_state["registry"]
 
 
 # ------------------------------------------------------------------
@@ -549,8 +561,8 @@ def render_sidebar():
     st.sidebar.markdown("##### 📊 Data Source")
     data_source = st.sidebar.radio(
         "Data Source",
-        ["Upload CSV", "Generate Random"],
-        index=1,
+        ["Upload CSV", "Database", "Generate Random"],
+        index=2,
         label_visibility="collapsed",
     )
 
@@ -563,15 +575,33 @@ def render_sidebar():
             type=["csv"],
             help="Expected columns: Date, Open, High, Low, Close, Volume",
         )
+        save_to_db = st.sidebar.checkbox("Save to database", value=True)
         if uploaded is not None:
             try:
                 data_dict = load_csv_data(uploaded.getvalue(), uploaded.name)
                 ctx = data_to_context(data_dict)
                 st.sidebar.success(f"✅ {ctx.total_bars:,} bars — {data_dict['symbol']}")
+                # Persist to DB
+                if save_to_db:
+                    _save_csv_to_db(data_dict)
             except Exception as e:
                 st.sidebar.error(f"❌ {e}")
         else:
             st.sidebar.info("👆 Upload a CSV file to begin")
+
+    elif data_source == "Database":
+        repo = get_repository()
+        symbols = repo.get_symbols()
+        if symbols:
+            selected_symbol = st.sidebar.selectbox("Select Asset", symbols)
+            if selected_symbol:
+                try:
+                    ctx = load_from_db(selected_symbol)
+                    st.sidebar.success(f"✅ {ctx.total_bars:,} bars — {selected_symbol}")
+                except Exception as e:
+                    st.sidebar.error(f"❌ {e}")
+        else:
+            st.sidebar.info("No assets yet. Upload a CSV first.")
 
     else:
         num_bars = st.sidebar.slider("Number of Bars", 100, 10000, 1000, step=100)
@@ -1134,6 +1164,160 @@ def render_function_reference():
 
 
 # ------------------------------------------------------------------
+# Indicator Manager
+# ------------------------------------------------------------------
+
+def render_indicator_manager(ctx: MarketContext):
+    """Render the Indicator Manager tab for CRUD on custom indicators."""
+    _section_header("🛠️", "Indicator Manager", "Custom")
+    st.caption("Create, edit, and test custom indicators stored in the database.")
+
+    repo = get_repository()
+    indicators = repo.get_all_indicators()
+
+    col_list, col_editor = st.columns([1, 2])
+
+    # ---------- Left Column: Indicator List ----------
+    with col_list:
+        st.markdown("##### 📂 Saved Indicators")
+        if not indicators:
+            st.info("No custom indicators yet.")
+        for ind in indicators:
+            label = f"**{ind['name']}**"
+            if ind['args']:
+                label += f" ({', '.join(ind['args'])})"
+            if st.button(label, key=f"sel_{ind['name']}", use_container_width=True):
+                st.session_state["mgr_name"] = ind["name"]
+                st.session_state["mgr_args"] = ", ".join(ind["args"])
+                st.session_state["mgr_formula"] = ind["formula"]
+                st.session_state["mgr_desc"] = ind.get("description", "")
+                st.rerun()
+
+        st.markdown("---")
+        if st.button("➕ New Indicator", use_container_width=True):
+            st.session_state["mgr_name"] = ""
+            st.session_state["mgr_args"] = ""
+            st.session_state["mgr_formula"] = ""
+            st.session_state["mgr_desc"] = ""
+            st.rerun()
+
+    # ---------- Right Column: Editor ----------
+    with col_editor:
+        st.markdown("##### ✏️ Indicator Editor")
+
+        name = st.text_input(
+            "Name (e.g. AVG_PRICE)",
+            value=st.session_state.get("mgr_name", ""),
+            placeholder="MY_INDICATOR",
+        ).strip().upper()
+
+        args_str = st.text_input(
+            "Arguments (comma-separated, leave empty for none)",
+            value=st.session_state.get("mgr_args", ""),
+            placeholder="fast, slow",
+        ).strip()
+
+        formula = st.text_area(
+            "Formula (LECAT expression)",
+            value=st.session_state.get("mgr_formula", ""),
+            height=80,
+            placeholder="e.g., (HIGH + LOW) / 2",
+        ).strip()
+
+        description = st.text_input(
+            "Description (optional)",
+            value=st.session_state.get("mgr_desc", ""),
+            placeholder="Average of high and low prices",
+        ).strip()
+
+        # Parse args
+        args_list = [a.strip() for a in args_str.split(",") if a.strip()] if args_str else []
+
+        # Action buttons
+        btn_col1, btn_col2, btn_col3 = st.columns(3)
+        with btn_col1:
+            save_clicked = st.button("💾 Save", type="primary", use_container_width=True,
+                                     disabled=not name or not formula)
+        with btn_col2:
+            test_clicked = st.button("🧪 Test", use_container_width=True,
+                                     disabled=not formula)
+        with btn_col3:
+            delete_clicked = st.button("🗑️ Delete", use_container_width=True,
+                                       disabled=not name)
+
+        if save_clicked and name and formula:
+            repo.save_indicator(name, args_list, formula, description)
+            # Reload registry to pick up the new indicator
+            registry = get_registry()
+            registry.reload_custom_indicators()
+            st.success(f"✅ Saved indicator **{name}**")
+            st.session_state["mgr_name"] = name
+            st.session_state["mgr_args"] = args_str
+            st.session_state["mgr_formula"] = formula
+            st.session_state["mgr_desc"] = description
+
+        if test_clicked and formula:
+            _test_indicator(name or "TEST", args_list, formula, ctx)
+
+        if delete_clicked and name:
+            if repo.delete_indicator(name):
+                registry = get_registry()
+                registry.reload_custom_indicators()
+                st.success(f"🗑️ Deleted **{name}**")
+                st.session_state["mgr_name"] = ""
+                st.session_state["mgr_formula"] = ""
+                st.session_state["mgr_args"] = ""
+                st.session_state["mgr_desc"] = ""
+            else:
+                st.warning(f"Indicator '{name}' not found.")
+
+
+def _test_indicator(name: str, args_list: list, formula: str, ctx: MarketContext):
+    """Test a custom indicator formula against the current data."""
+    try:
+        from lecat.dynamic_registry import _substitute_args, _evaluate_composite
+
+        # Build test args with default values
+        test_args = {a: 0 for a in args_list}
+        resolved = _substitute_args(formula, args_list, test_args)
+
+        # Try to compile
+        tokens = Lexer(resolved).tokenize()
+        ast = Parser(tokens).parse()
+
+        # Evaluate at the last bar
+        registry = get_registry()
+        evaluator = Evaluator(registry)
+        result = evaluator.evaluate(ast, ctx)
+
+        st.success(f"✅ Formula compiles OK. Result at last bar: **{result}**")
+
+    except Exception as e:
+        st.error(f"❌ **{type(e).__name__}:** {e}")
+        st.info("💡 Check your formula syntax. Variables like `fast` will be replaced with argument values.")
+
+
+def _save_csv_to_db(data_dict: dict) -> None:
+    """Save uploaded CSV data to the SQLite database."""
+    repo = get_repository()
+    symbol = data_dict.get("symbol", "UNKNOWN")
+    n = data_dict["total_bars"]
+    rows = []
+    for i in range(n):
+        rows.append({
+            "timestamp": f"2020-01-01T{i:06d}",  # Synthetic timestamps
+            "open": data_dict["open"][i],
+            "high": data_dict["high"][i],
+            "low": data_dict["low"][i],
+            "close": data_dict["close"][i],
+            "volume": data_dict["volume"][i],
+        })
+    inserted = repo.save_market_data(rows, symbol)
+    if inserted > 0:
+        st.sidebar.caption(f"💾 Saved {inserted:,} bars to database")
+
+
+# ------------------------------------------------------------------
 # Helpers
 # ------------------------------------------------------------------
 
@@ -1173,9 +1357,10 @@ def main():
     render_data_overview(ctx)
 
     # Mode tabs
-    tab_lab, tab_evolution, tab_reference = st.tabs([
+    tab_lab, tab_evolution, tab_indicators, tab_reference = st.tabs([
         "🔬 Strategy Lab",
         "🧬 Evolution Engine",
+        "🛠️ Indicator Manager",
         "📚 Function Reference",
     ])
 
@@ -1184,6 +1369,9 @@ def main():
 
     with tab_evolution:
         render_evolution_mode(ctx, initial_capital)
+
+    with tab_indicators:
+        render_indicator_manager(ctx)
 
     with tab_reference:
         render_function_reference()
