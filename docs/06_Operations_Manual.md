@@ -514,6 +514,32 @@ The project includes a `Makefile` for common tasks:
 
 ---
 
+## 13. Desktop App
+
+LECAT can be packaged as a standalone desktop executable (for Windows and macOS) that requires no Python installation.
+
+### 13.1 Running the Desktop App
+
+1. Download the `.zip` release for your operating system from the [GitHub Releases](https://github.com/racoya/stockstats-lecat/releases) page.
+2. Extract the folder to a permanent location (like your Desktop or Applications folder).
+3. Double-click the `LECAT_Trader` executable.
+4. A terminal window will open to start the backend server, and your default web browser will automatically launch the dashboard.
+
+**Data Persistence:** When running the desktop app, your uploaded CSV files, custom indicators, and logs are safely stored in your home directory (`~/.lecat/`). You can close and reopen the app without losing your work.
+
+### 13.2 Building the Executable Locally
+
+If you prefer to build the executable yourself from source:
+
+```bash
+pip install pyinstaller
+make build-desktop
+```
+
+The compiled application folder will be generated in `dist/LECAT_Trader/`.
+
+---
+
 ## 10. Python Packaging
 
 LECAT is packaged with `pyproject.toml` and can be installed as a Python package:

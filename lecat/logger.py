@@ -16,8 +16,14 @@ import os
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
+import sys
+
 # Default log directory
-DEFAULT_LOG_DIR = "logs"
+if getattr(sys, "frozen", False):
+    DEFAULT_LOG_DIR = str(Path.home() / ".lecat" / "logs")
+else:
+    DEFAULT_LOG_DIR = "logs"
+
 DEFAULT_LOG_FILE = "lecat.log"
 DEFAULT_MAX_BYTES = 10 * 1024 * 1024  # 10MB
 DEFAULT_BACKUP_COUNT = 5

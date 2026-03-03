@@ -40,3 +40,10 @@ clean:  ## Remove caches, logs, and build artifacts
 	find . -type d -name "*.egg-info" -exec rm -rf {} + 2>/dev/null || true
 	rm -rf build/ dist/ logs/
 	@echo "✅ Cleaned"
+
+build-desktop:  ## Build LECAT standalone executable
+	@echo "=> Building LECAT standalone executable..."
+	pip install pyinstaller
+	rm -rf build dist
+	pyinstaller lecat.spec --clean --noconfirm
+	@echo "=> Build complete. Check dist/LECAT_Trader/"

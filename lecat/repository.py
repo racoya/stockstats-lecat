@@ -16,8 +16,16 @@ from typing import Any
 # Path to schema file
 _SCHEMA_PATH = Path(__file__).parent / "data" / "schema.sql"
 
+import sys
+
 # Default database location
-DEFAULT_DB_PATH = Path(__file__).parent.parent / "lecat.db"
+if getattr(sys, "frozen", False):
+    # Running as PyInstaller bundle; use permanent user directory
+    DEFAULT_DB_PATH = Path.home() / ".lecat" / "lecat.db"
+else:
+    # Not bundled; use project directory
+    DEFAULT_DB_PATH = Path(__file__).parent.parent / "lecat.db"
+
 
 
 class Repository:

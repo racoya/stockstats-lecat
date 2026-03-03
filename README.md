@@ -34,9 +34,14 @@
 
 ## 🚀 Quickstart
 
+### Option 1: Standalone Desktop App (Easiest)
+Download the standalone executable (no Python required) for Windows or macOS from the [Releases page](https://github.com/racoya/stockstats-lecat/releases). Extract the `.zip` file and double-click `LECAT_Trader`.
+
+### Option 2: Run from Source (For Developers)
+
 ```bash
 # 1. Clone & install
-git clone <repository-url> && cd stockstats-lecat
+git clone https://github.com/racoya/stockstats-lecat.git && cd stockstats-lecat
 pip install -r requirements.txt
 
 # 2. Launch the dashboard
