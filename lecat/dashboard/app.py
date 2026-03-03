@@ -227,7 +227,6 @@ def render_lab_mode(ctx: MarketContext, initial_capital: float):
             value=st.session_state.get("lab_expression", "RSI(14) > 70 AND PRICE > SMA(50)"),
             height=80,
             placeholder="e.g., RSI(14) > 70 AND PRICE > SMA(50)",
-            key="lab_input",
         )
 
     with col2:
@@ -241,11 +240,11 @@ def render_lab_mode(ctx: MarketContext, initial_capital: float):
             "SMA Cross": "PRICE > SMA(50)",
             "Bollinger": "PRICE > BB_UPPER(20, 2.0)",
             "MACD Bull": "MACD(12, 26, 9) > 0",
+            "EMA Crossover": "EMA(10) > EMA(50) AND EMA(10)[1] <= EMA(50)[1]",
         }
         for label, expr in presets.items():
             if st.button(label, key=f"preset_{label}", use_container_width=True):
                 st.session_state["lab_expression"] = expr
-                st.session_state["lab_input"] = expr
                 st.rerun()
 
     # Strategy JSON upload

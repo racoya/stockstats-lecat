@@ -1,0 +1,14 @@
+{
+  "name": "EMA 10 > EMA",
+  "expression": "EMA(10) > EMA(50) AND EMA(10)[1] <= EMA(50)[1]",
+  "metrics": {
+    "sharpe": 0.5441,
+    "return": 7.3577,
+    "win_rate": 0.5319,
+    "trades": 141,
+    "max_drawdown": 19.7055,
+    "fitness": 0.8476
+  },
+  "timestamp": "2026-03-03T03:54:50.937533+00:00",
+  "engine_version": "2.0"
+}
