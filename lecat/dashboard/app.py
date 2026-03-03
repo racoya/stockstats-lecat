@@ -55,54 +55,425 @@ st.set_page_config(
 
 
 # ------------------------------------------------------------------
-# Custom CSS
+# Design System — Custom CSS
 # ------------------------------------------------------------------
 
-st.markdown("""
+# Color palette
+CYAN = "#00d2ff"
+CYAN_MUTED = "rgba(0, 210, 255, 0.08)"
+GREEN = "#00ff88"
+GREEN_MUTED = "rgba(0, 255, 136, 0.10)"
+RED = "#ff6b6b"
+RED_MUTED = "rgba(255, 107, 107, 0.10)"
+GOLD = "#ffd700"
+BG_PRIMARY = "#0e1117"
+BG_CARD = "#131720"
+BG_CARD_HOVER = "#181e2a"
+BG_SIDEBAR = "#0d1117"
+BORDER = "#1e2738"
+BORDER_ACCENT = "#2a3650"
+TEXT_PRIMARY = "#e6edf3"
+TEXT_SECONDARY = "#8b949e"
+TEXT_DIM = "#484f58"
+
+st.markdown(f"""
 <style>
-    /* Dark theme enhancements */
-    .stApp {
-        background-color: #0e1117;
-    }
-    .metric-card {
-        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-        border: 1px solid #2d3748;
-        border-radius: 12px;
-        padding: 20px;
+    /* ── Import premium font ── */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+    /* ── Global ── */
+    .stApp {{
+        background-color: {BG_PRIMARY};
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }}
+
+    /* ── Sidebar ── */
+    section[data-testid="stSidebar"] {{
+        background: linear-gradient(180deg, {BG_SIDEBAR} 0%, #0a0e14 100%);
+        border-right: 1px solid {BORDER};
+    }}
+    section[data-testid="stSidebar"] .stMarkdown h2 {{
+        font-size: 1.1rem;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }}
+
+    /* ── Header ── */
+    .dashboard-header {{
         text-align: center;
-        transition: transform 0.2s;
-    }
-    .metric-card:hover {
-        transform: translateY(-2px);
-    }
-    .metric-value {
-        font-size: 2em;
+        padding: 1.5rem 0 0.5rem 0;
+    }}
+    .dashboard-header h1 {{
+        font-size: 2rem;
         font-weight: 700;
-        color: #00d2ff;
-    }
-    .metric-label {
-        font-size: 0.85em;
-        color: #8892b0;
+        background: linear-gradient(135deg, {CYAN} 0%, #7b68ee 50%, {GREEN} 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 0;
+    }}
+    .dashboard-header .subtitle {{
+        color: {TEXT_SECONDARY};
+        font-size: 0.85rem;
+        font-weight: 400;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        margin-top: 2px;
+    }}
+
+    /* ── Metric cards ── */
+    .metric-card {{
+        background: linear-gradient(135deg, {BG_CARD} 0%, #151b28 100%);
+        border: 1px solid {BORDER};
+        border-radius: 10px;
+        padding: 14px 12px;
+        text-align: center;
+        transition: all 0.25s ease;
+        position: relative;
+        overflow: hidden;
+    }}
+    .metric-card::before {{
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, {CYAN}, transparent);
+        opacity: 0;
+        transition: opacity 0.25s ease;
+    }}
+    .metric-card:hover {{
+        transform: translateY(-2px);
+        border-color: {BORDER_ACCENT};
+        box-shadow: 0 4px 20px rgba(0, 210, 255, 0.08);
+    }}
+    .metric-card:hover::before {{
+        opacity: 1;
+    }}
+    .metric-value {{
+        font-size: 1.6em;
+        font-weight: 700;
+        font-family: 'JetBrains Mono', monospace;
+        color: {CYAN};
+        line-height: 1.2;
+    }}
+    .metric-value.positive {{ color: {GREEN}; }}
+    .metric-value.negative {{ color: {RED}; }}
+    .metric-label {{
+        font-size: 0.7em;
+        color: {TEXT_SECONDARY};
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        font-weight: 500;
+        margin-bottom: 4px;
+    }}
+
+    /* ── Data overview cards ── */
+    .data-stat {{
+        background: {BG_CARD};
+        border: 1px solid {BORDER};
+        border-radius: 8px;
+        padding: 12px 16px;
+        text-align: center;
+    }}
+    .data-stat .stat-value {{
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 1.15em;
+        font-weight: 600;
+        color: {TEXT_PRIMARY};
+    }}
+    .data-stat .stat-label {{
+        font-size: 0.7em;
+        color: {TEXT_SECONDARY};
         text-transform: uppercase;
         letter-spacing: 1px;
-    }
-    .hall-of-fame {
-        border: 1px solid #2d3748;
-        border-radius: 8px;
-        overflow: hidden;
-    }
-    .status-badge {
-        display: inline-block;
+        margin-bottom: 2px;
+    }}
+
+    /* ── Section headers ── */
+    .section-header {{
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 1.2rem 0 0.6rem 0;
+        padding-bottom: 8px;
+        border-bottom: 1px solid {BORDER};
+    }}
+    .section-header .icon {{
+        font-size: 1.3em;
+    }}
+    .section-header .title {{
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: {TEXT_PRIMARY};
+        letter-spacing: 0.3px;
+    }}
+    .section-header .badge {{
+        font-size: 0.65rem;
+        background: {CYAN_MUTED};
+        color: {CYAN};
         padding: 2px 8px;
-        border-radius: 12px;
-        font-size: 0.8em;
-    }
-    div[data-testid="stSidebar"] {
-        background: linear-gradient(180deg, #0d1117 0%, #161b22 100%);
-    }
-    /* Hide Streamlit branding */
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
+        border-radius: 20px;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }}
+
+    /* ── Preset pill buttons ── */
+    .preset-row {{
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin: 8px 0;
+    }}
+
+    /* ── Function reference cards ── */
+    .fn-card {{
+        background: {BG_CARD};
+        border: 1px solid {BORDER};
+        border-radius: 8px;
+        padding: 10px 14px;
+        margin-bottom: 6px;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.85em;
+        transition: border-color 0.2s ease;
+    }}
+    .fn-card:hover {{
+        border-color: {BORDER_ACCENT};
+    }}
+    .fn-card .fn-name {{
+        color: {CYAN};
+        font-weight: 600;
+    }}
+    .fn-card .fn-args {{
+        color: {TEXT_SECONDARY};
+        font-weight: 400;
+    }}
+    .fn-card .fn-desc {{
+        font-family: 'Inter', sans-serif;
+        font-size: 0.85em;
+        color: {TEXT_DIM};
+        margin-top: 2px;
+    }}
+
+    /* ── Walk-forward result cards ── */
+    .wf-card {{
+        background: {BG_CARD};
+        border: 1px solid {BORDER};
+        border-radius: 8px;
+        padding: 16px;
+        text-align: center;
+    }}
+    .wf-card.good {{ border-left: 3px solid {GREEN}; }}
+    .wf-card.warn {{ border-left: 3px solid {GOLD}; }}
+    .wf-card.bad  {{ border-left: 3px solid {RED}; }}
+    .wf-card .wf-value {{
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 1.5em;
+        font-weight: 700;
+    }}
+    .wf-card .wf-label {{
+        font-size: 0.7em;
+        color: {TEXT_SECONDARY};
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 4px;
+    }}
+
+    /* ── Streamlit overrides ── */
+    .stTabs [data-baseweb="tab-list"] {{
+        gap: 0;
+        background: {BG_CARD};
+        border-radius: 8px;
+        padding: 4px;
+        border: 1px solid {BORDER};
+    }}
+    .stTabs [data-baseweb="tab"] {{
+        border-radius: 6px;
+        padding: 8px 20px;
+        font-weight: 500;
+        font-size: 0.85rem;
+    }}
+    .stTabs [aria-selected="true"] {{
+        background: {BG_PRIMARY} !important;
+        border: 1px solid {BORDER_ACCENT};
+    }}
+    div[data-testid="stMetric"] {{
+        background: {BG_CARD};
+        border: 1px solid {BORDER};
+        border-radius: 8px;
+        padding: 12px 16px;
+    }}
+    div[data-testid="stMetric"] label {{
+        color: {TEXT_SECONDARY} !important;
+        font-size: 0.75rem !important;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }}
+    div[data-testid="stMetric"] [data-testid="stMetricValue"] {{
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 1.3rem !important;
+    }}
+    .stDataFrame {{
+        border: 1px solid {BORDER};
+        border-radius: 8px;
+    }}
+
+    /* ── Quick action buttons ── */
+    .stButton > button {{
+        border-radius: 8px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }}
+    .stDownloadButton > button {{
+        background: linear-gradient(135deg, #1a3a4a 0%, #162d3e 100%);
+        border: 1px solid {BORDER_ACCENT};
+        border-radius: 8px;
+        font-weight: 500;
+    }}
+    .stDownloadButton > button:hover {{
+        border-color: {CYAN};
+        box-shadow: 0 2px 12px rgba(0, 210, 255, 0.15);
+    }}
+
+    /* ── Dark mode for ALL inputs ── */
+    /* Text inputs & text areas */
+    .stTextArea textarea,
+    .stTextInput input,
+    div[data-baseweb="input"] input,
+    div[data-baseweb="textarea"] textarea {{
+        background-color: {BG_CARD} !important;
+        color: {TEXT_PRIMARY} !important;
+        border: 1px solid {BORDER} !important;
+        border-radius: 8px !important;
+        caret-color: {CYAN} !important;
+    }}
+    .stTextArea textarea:focus,
+    .stTextInput input:focus {{
+        border-color: {BORDER_ACCENT} !important;
+        box-shadow: 0 0 0 1px {BORDER_ACCENT} !important;
+    }}
+
+    /* Number inputs */
+    div[data-testid="stNumberInput"] input {{
+        background-color: {BG_CARD} !important;
+        color: {TEXT_PRIMARY} !important;
+        border: 1px solid {BORDER} !important;
+    }}
+    div[data-testid="stNumberInput"] button {{
+        background-color: {BG_CARD} !important;
+        color: {TEXT_SECONDARY} !important;
+        border-color: {BORDER} !important;
+    }}
+    div[data-testid="stNumberInput"] button:hover {{
+        background-color: {BG_CARD_HOVER} !important;
+        color: {TEXT_PRIMARY} !important;
+    }}
+
+    /* Select boxes / dropdowns */
+    div[data-baseweb="select"] > div {{
+        background-color: {BG_CARD} !important;
+        border: 1px solid {BORDER} !important;
+        color: {TEXT_PRIMARY} !important;
+    }}
+    div[data-baseweb="popover"] > div {{
+        background-color: {BG_CARD} !important;
+        border: 1px solid {BORDER} !important;
+    }}
+    div[data-baseweb="menu"] {{
+        background-color: {BG_CARD} !important;
+    }}
+    div[role="option"] {{
+        background-color: {BG_CARD} !important;
+        color: {TEXT_PRIMARY} !important;
+    }}
+    div[role="option"]:hover,
+    div[role="option"][aria-selected="true"] {{
+        background-color: {BG_CARD_HOVER} !important;
+    }}
+
+    /* File uploader */
+    div[data-testid="stFileUploader"] section {{
+        background-color: {BG_CARD} !important;
+        border: 1px dashed {BORDER_ACCENT} !important;
+        border-radius: 8px !important;
+    }}
+    div[data-testid="stFileUploader"] section:hover {{
+        border-color: {CYAN} !important;
+    }}
+
+    /* Expander */
+    details[data-testid="stExpander"] {{
+        background-color: {BG_CARD} !important;
+        border: 1px solid {BORDER} !important;
+        border-radius: 8px !important;
+    }}
+    details[data-testid="stExpander"] summary {{
+        color: {TEXT_SECONDARY} !important;
+    }}
+    details[data-testid="stExpander"] summary:hover {{
+        color: {TEXT_PRIMARY} !important;
+    }}
+
+    /* Radio buttons */
+    div[data-testid="stRadio"] label span {{
+        color: {TEXT_PRIMARY} !important;
+    }}
+
+    /* Sliders */
+    div[data-testid="stSlider"] label {{
+        color: {TEXT_SECONDARY} !important;
+    }}
+
+    /* Labels for all widgets */
+    .stTextArea label,
+    .stTextInput label,
+    .stSelectbox label,
+    .stMultiSelect label,
+    .stSlider label,
+    div[data-testid="stNumberInput"] label {{
+        color: {TEXT_SECONDARY} !important;
+    }}
+
+    /* Info/success/error boxes */
+    div[data-testid="stAlert"] {{
+        background-color: {BG_CARD} !important;
+        border: 1px solid {BORDER} !important;
+        color: {TEXT_PRIMARY} !important;
+    }}
+
+    /* Sidebar inputs too */
+    section[data-testid="stSidebar"] input,
+    section[data-testid="stSidebar"] textarea {{
+        background-color: #0a0e14 !important;
+        color: {TEXT_PRIMARY} !important;
+        border-color: {BORDER} !important;
+    }}
+    section[data-testid="stSidebar"] div[data-testid="stNumberInput"] button {{
+        background-color: #0a0e14 !important;
+        color: {TEXT_SECONDARY} !important;
+        border-color: {BORDER} !important;
+    }}
+
+    /* Code blocks in Function Reference */
+    .stCodeBlock, pre {{
+        background-color: {BG_CARD} !important;
+        border: 1px solid {BORDER} !important;
+    }}
+
+    /* ── Hide Streamlit branding ── */
+    #MainMenu {{visibility: hidden;}}
+    footer {{visibility: hidden;}}
+    header[data-testid="stHeader"] {{
+        background: {BG_PRIMARY};
+        border-bottom: 1px solid {BORDER};
+    }}
+
+    /* ── Responsive tweaks ── */
+    @media (max-width: 768px) {{
+        .metric-card {{ padding: 10px 8px; }}
+        .metric-value {{ font-size: 1.2em; }}
+        .dashboard-header h1 {{ font-size: 1.4rem; }}
+    }}
 </style>
 """, unsafe_allow_html=True)
 
@@ -165,14 +536,22 @@ def data_to_context(data: dict) -> MarketContext:
 
 def render_sidebar():
     """Render the sidebar with data upload and settings."""
-    st.sidebar.markdown("## 📈 LECAT Dashboard")
+    st.sidebar.markdown("""
+    <div style="text-align:center; padding: 8px 0 4px 0;">
+        <span style="font-size: 1.6em;">📈</span><br>
+        <span style="font-size: 1rem; font-weight: 700; letter-spacing: 1px;">LECAT</span><br>
+        <span style="font-size: 0.65rem; color: #8b949e; letter-spacing: 2px; text-transform: uppercase;">Quantitative Dashboard</span>
+    </div>
+    """, unsafe_allow_html=True)
     st.sidebar.markdown("---")
 
     # Data source selection
+    st.sidebar.markdown("##### 📊 Data Source")
     data_source = st.sidebar.radio(
         "Data Source",
         ["Upload CSV", "Generate Random"],
         index=1,
+        label_visibility="collapsed",
     )
 
     ctx = None
@@ -188,9 +567,9 @@ def render_sidebar():
             try:
                 data_dict = load_csv_data(uploaded.getvalue(), uploaded.name)
                 ctx = data_to_context(data_dict)
-                st.sidebar.success(f"✅ Loaded {ctx.total_bars:,} bars — {data_dict['symbol']}")
+                st.sidebar.success(f"✅ {ctx.total_bars:,} bars — {data_dict['symbol']}")
             except Exception as e:
-                st.sidebar.error(f"❌ Error: {e}")
+                st.sidebar.error(f"❌ {e}")
         else:
             st.sidebar.info("👆 Upload a CSV file to begin")
 
@@ -202,9 +581,18 @@ def render_sidebar():
     st.sidebar.markdown("---")
 
     # Settings
-    st.sidebar.markdown("### ⚙️ Settings")
+    st.sidebar.markdown("##### ⚙️ Settings")
     initial_capital = st.sidebar.number_input(
         "Initial Capital ($)", value=10000, step=1000, min_value=100
+    )
+
+    # Footer
+    st.sidebar.markdown("---")
+    st.sidebar.markdown(
+        '<div style="text-align:center; font-size: 0.7rem; color: #484f58;">'
+        'LECAT v2.0.0 · MIT License'
+        '</div>',
+        unsafe_allow_html=True,
     )
 
     return ctx, initial_capital
@@ -216,57 +604,60 @@ def render_sidebar():
 
 def render_lab_mode(ctx: MarketContext, initial_capital: float):
     """Render the Lab mode tab for manual strategy testing."""
-    st.markdown("### 🔬 Strategy Lab")
-    st.markdown("Type a LECAT expression below and click **Run Backtest** to see results.")
+    _section_header("🔬", "Strategy Lab", "Interactive")
+    st.caption("Write a LECAT expression and click **Run Backtest** to see results.")
 
-    col1, col2 = st.columns([3, 1])
-
-    with col1:
-        expression = st.text_area(
-            "LECAT Expression",
-            value=st.session_state.get("lab_expression", "RSI(14) > 70 AND PRICE > SMA(50)"),
-            height=80,
-            placeholder="e.g., RSI(14) > 70 AND PRICE > SMA(50)",
-        )
-
-    with col2:
-        st.markdown("<br>", unsafe_allow_html=True)
-        run_clicked = st.button("▶ Run Backtest", type="primary", use_container_width=True)
-
-        # Quick presets
-        st.markdown("**Quick Presets:**")
-        presets = {
-            "RSI Overbought": "RSI(14) > 70",
-            "SMA Cross": "PRICE > SMA(50)",
-            "Bollinger": "PRICE > BB_UPPER(20, 2.0)",
-            "MACD Bull": "MACD(12, 26, 9) > 0",
-            "EMA Crossover": "EMA(10) > EMA(50) AND EMA(10)[1] <= EMA(50)[1]",
-        }
-        for label, expr in presets.items():
+    # Presets as horizontal pills ABOVE the input
+    st.markdown("**Quick Presets:**")
+    presets = {
+        "RSI Overbought": "RSI(14) > 70",
+        "SMA Cross": "PRICE > SMA(50)",
+        "Bollinger Band": "PRICE > BB_UPPER(20, 2.0)",
+        "MACD Bull": "MACD(12, 26, 9) > 0",
+        "EMA Crossover ↑": "EMA(10) > EMA(50) AND EMA(10)[1] <= EMA(50)[1]",
+    }
+    preset_cols = st.columns(len(presets))
+    for col, (label, expr) in zip(preset_cols, presets.items()):
+        with col:
             if st.button(label, key=f"preset_{label}", use_container_width=True):
                 st.session_state["lab_expression"] = expr
                 st.rerun()
 
-    # Strategy JSON upload
-    st.markdown("---")
-    uploaded_json = st.file_uploader(
-        "📁 Upload Strategy JSON",
-        type=["json"],
-        help="Upload a previously saved strategy to auto-populate the expression",
-        key="lab_json_upload",
-    )
-    if uploaded_json is not None:
-        try:
-            import json
-            strategy_data = json.loads(uploaded_json.getvalue())
-            if "expression" in strategy_data:
-                st.session_state["lab_expression"] = strategy_data["expression"]
-                st.success(f"✅ Loaded strategy: **{strategy_data.get('name', 'Unknown')}**")
-                st.rerun()
-            else:
-                st.error("Invalid strategy file: missing 'expression' field")
-        except Exception as e:
-            st.error(f"Failed to load strategy: {e}")
+    # Expression input + Run button
+    col_input, col_run = st.columns([5, 1])
+    with col_input:
+        expression = st.text_area(
+            "LECAT Expression",
+            value=st.session_state.get("lab_expression", "RSI(14) > 70 AND PRICE > SMA(50)"),
+            height=68,
+            placeholder="e.g., RSI(14) > 70 AND PRICE > SMA(50)",
+            label_visibility="collapsed",
+        )
+    with col_run:
+        st.markdown("<br>", unsafe_allow_html=True)
+        run_clicked = st.button("▶ Run Backtest", type="primary", use_container_width=True)
+
+    # Strategy JSON upload (collapsed by default)
+    with st.expander("📁 Import Strategy from JSON"):
+        uploaded_json = st.file_uploader(
+            "Upload Strategy JSON",
+            type=["json"],
+            help="Upload a previously saved strategy to auto-populate the expression",
+            key="lab_json_upload",
+            label_visibility="collapsed",
+        )
+        if uploaded_json is not None:
+            try:
+                import json
+                strategy_data = json.loads(uploaded_json.getvalue())
+                if "expression" in strategy_data:
+                    st.session_state["lab_expression"] = strategy_data["expression"]
+                    st.success(f"✅ Loaded: **{strategy_data.get('name', 'Unknown')}**")
+                    st.rerun()
+                else:
+                    st.error("Invalid file: missing 'expression' field")
+            except Exception as e:
+                st.error(f"Failed to load: {e}")
 
     if run_clicked:
         st.session_state["lab_expression"] = expression
@@ -295,7 +686,7 @@ def _run_lab_backtest(expression: str, ctx: MarketContext, initial_capital: floa
         # Display metrics
         _render_metrics(fitness, initial_capital)
 
-        # Download strategy button
+        # Action row: Download
         json_str = strategy_to_json_string(expression, fitness)
         st.download_button(
             label="💾 Download Strategy (JSON)",
@@ -314,24 +705,28 @@ def _run_lab_backtest(expression: str, ctx: MarketContext, initial_capital: floa
 
 
 def _render_metrics(fitness: FitnessResult, initial_capital: float):
-    """Render the metrics row."""
+    """Render the metrics row with styled cards."""
     cols = st.columns(6)
 
+    is_positive = fitness.total_return_pct >= 0
+    ret_class = "positive" if is_positive else "negative"
+    sharpe_class = "positive" if fitness.sharpe_ratio > 0 else "negative"
+
     metrics = [
-        ("Total Return", f"{fitness.total_return_pct:+.2f}%", "📊"),
-        ("Sharpe Ratio", f"{fitness.sharpe_ratio:.3f}", "📐"),
-        ("Win Rate", f"{fitness.win_rate:.0%}", "🎯"),
-        ("Trades", f"{fitness.num_trades}", "🔄"),
-        ("Max Drawdown", f"{fitness.max_drawdown_pct:.1f}%", "📉"),
-        ("Fitness", f"{fitness.fitness_score:.4f}", "⭐"),
+        ("Total Return", f"{fitness.total_return_pct:+.2f}%", ret_class),
+        ("Sharpe Ratio", f"{fitness.sharpe_ratio:.3f}", sharpe_class),
+        ("Win Rate", f"{fitness.win_rate:.0%}", ""),
+        ("Trades", f"{fitness.num_trades}", ""),
+        ("Max Drawdown", f"{fitness.max_drawdown_pct:.1f}%", "negative" if fitness.max_drawdown_pct < -5 else ""),
+        ("Fitness Score", f"{fitness.fitness_score:.4f}", "positive" if fitness.fitness_score > 0 else ""),
     ]
 
-    for col, (label, value, icon) in zip(cols, metrics):
+    for col, (label, value, css_class) in zip(cols, metrics):
         with col:
             st.markdown(f"""
             <div class="metric-card">
-                <div class="metric-label">{icon} {label}</div>
-                <div class="metric-value">{value}</div>
+                <div class="metric-label">{label}</div>
+                <div class="metric-value {css_class}">{value}</div>
             </div>
             """, unsafe_allow_html=True)
 
@@ -341,12 +736,11 @@ def _render_candlestick_chart(result, ctx: MarketContext, expression: str, fitne
     fig = make_subplots(
         rows=3, cols=1,
         shared_xaxes=True,
-        vertical_spacing=0.03,
+        vertical_spacing=0.04,
         subplot_titles=[f"Price Chart — {expression}", "Volume", "Signal"],
         row_heights=[0.6, 0.2, 0.2],
     )
 
-    # Bar indices
     x = list(range(ctx.total_bars))
 
     # Candlestick
@@ -358,55 +752,59 @@ def _render_candlestick_chart(result, ctx: MarketContext, expression: str, fitne
             low=list(ctx.low),
             close=list(ctx.close),
             name="Price",
-            increasing_line_color="#00d2ff",
-            decreasing_line_color="#ff6b6b",
+            increasing_line_color=CYAN,
+            decreasing_line_color=RED,
         ),
         row=1, col=1,
     )
 
-    # Buy signals (True → green triangles)
+    # Buy signals
     buy_x = [i for i, s in enumerate(result.signals) if s]
     buy_y = [float(ctx.low[i]) * 0.998 for i in buy_x]
     fig.add_trace(
         go.Scatter(
             x=buy_x, y=buy_y,
             mode="markers",
-            marker=dict(symbol="triangle-up", size=8, color="#00ff88"),
+            marker=dict(symbol="triangle-up", size=8, color=GREEN),
             name="Signal=True",
         ),
         row=1, col=1,
     )
 
     # Volume bars
-    vol_colors = ["#00d2ff" if c > o else "#ff6b6b"
-                  for c, o in zip(ctx.close, ctx.open)]
+    vol_colors = [CYAN if c > o else RED for c, o in zip(ctx.close, ctx.open)]
     fig.add_trace(
-        go.Bar(x=x, y=list(ctx.volume), marker_color=vol_colors, name="Volume", opacity=0.5),
+        go.Bar(x=x, y=list(ctx.volume), marker_color=vol_colors, name="Volume", opacity=0.4),
         row=2, col=1,
     )
 
     # Signal binary plot
-    sig_colors = ["#00ff88" if s else "#333" for s in result.signals]
+    sig_colors = [GREEN if s else "#1a1a2e" for s in result.signals]
     fig.add_trace(
         go.Bar(x=x, y=[1 if s else 0 for s in result.signals],
                marker_color=sig_colors, name="Signal", opacity=0.7),
         row=3, col=1,
     )
 
-    # Layout
     fig.update_layout(
         template="plotly_dark",
-        height=700,
+        height=680,
         showlegend=True,
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1,
+                    font=dict(size=11)),
         xaxis_rangeslider_visible=False,
-        margin=dict(l=50, r=50, t=80, b=50),
-        paper_bgcolor="#0e1117",
-        plot_bgcolor="#0e1117",
+        margin=dict(l=50, r=20, t=60, b=30),
+        paper_bgcolor=BG_PRIMARY,
+        plot_bgcolor=BG_PRIMARY,
+        font=dict(family="Inter, sans-serif", size=11),
     )
 
-    fig.update_xaxes(gridcolor="#1a1a2e")
-    fig.update_yaxes(gridcolor="#1a1a2e")
+    fig.update_xaxes(gridcolor=BORDER, zeroline=False)
+    fig.update_yaxes(gridcolor=BORDER, zeroline=False)
+
+    # Style subplot titles
+    for annotation in fig.layout.annotations:
+        annotation.font = dict(size=12, color=TEXT_SECONDARY)
 
     st.plotly_chart(fig, use_container_width=True)
 
@@ -417,31 +815,33 @@ def _render_candlestick_chart(result, ctx: MarketContext, expression: str, fitne
 
 def render_evolution_mode(ctx: MarketContext, initial_capital: float):
     """Render the Evolution mode tab for genetic optimization."""
-    st.markdown("### 🧬 Evolution Engine")
-    st.markdown("Configure and run the genetic algorithm to discover optimal strategies.")
+    _section_header("🧬", "Evolution Engine", "Genetic Algorithm")
+    st.caption("Configure and run the genetic algorithm to discover optimal strategies.")
 
-    # Config columns
+    # Config — two rows for visual balance
     col1, col2, col3, col4 = st.columns(4)
     with col1:
         generations = st.number_input("Generations", value=5, min_value=1, max_value=100, step=1)
     with col2:
-        pop_size = st.number_input("Population Size", value=50, min_value=10, max_value=1000, step=10)
+        pop_size = st.number_input("Population", value=50, min_value=10, max_value=1000, step=10)
     with col3:
         mutation_rate = st.slider("Mutation Rate", 0.0, 1.0, 0.3, 0.05)
     with col4:
-        split_ratio = st.slider("Train/Test Split", 0.5, 0.9, 0.7, 0.05)
+        split_ratio = st.slider("Train / Test", 0.5, 0.9, 0.7, 0.05)
 
-    col_btn, col_info = st.columns([1, 3])
+    # Action row
+    col_btn, col_info = st.columns([1, 4])
     with col_btn:
         evolve_clicked = st.button("🧬 Start Evolution", type="primary", use_container_width=True)
     with col_info:
-        st.info(f"Will train on first {split_ratio:.0%} of data ({int(ctx.total_bars * split_ratio):,} bars), "
-                f"test on remaining {1-split_ratio:.0%} ({ctx.total_bars - int(ctx.total_bars * split_ratio):,} bars)")
+        train_bars = int(ctx.total_bars * split_ratio)
+        test_bars = ctx.total_bars - train_bars
+        st.info(f"Train: **{train_bars:,} bars** ({split_ratio:.0%}) · "
+                f"Test: **{test_bars:,} bars** ({1-split_ratio:.0%})")
 
     if evolve_clicked:
         _run_evolution(ctx, generations, pop_size, mutation_rate, split_ratio, initial_capital)
 
-    # Display stored results
     if "evolution_results" in st.session_state:
         _render_hall_of_fame(ctx, initial_capital)
 
@@ -459,7 +859,6 @@ def _run_evolution(ctx, generations, pop_size, mutation_rate, split_ratio, initi
         verbose=False,
     )
 
-    # Run with progress simulation
     start = time.perf_counter()
     try:
         result = optimizer.run(generations=generations, split_ratio=split_ratio)
@@ -467,16 +866,11 @@ def _run_evolution(ctx, generations, pop_size, mutation_rate, split_ratio, initi
 
         progress_bar.progress(1.0, text="✅ Evolution complete!")
 
-        # Store top strategies in session state
         hall_of_fame = []
         registry = get_registry()
         evaluator = Evaluator(registry)
         backtester = Backtester(evaluator, registry)
 
-        # Get top individuals from the final population
-        final_gen = result.generations[-1] if result.generations else None
-
-        # Collect unique strategies from the optimizer result
         seen = set()
         best_ind = result.best_individual
         if best_ind.expression not in seen:
@@ -501,7 +895,7 @@ def _run_evolution(ctx, generations, pop_size, mutation_rate, split_ratio, initi
         st.session_state["evolution_result"] = result
         st.session_state["evolution_elapsed"] = elapsed
 
-        status_text.success(f"Completed {generations} generations in {elapsed:.1f}s")
+        status_text.success(f"✅ Completed {generations} generations in **{elapsed:.1f}s**")
 
     except Exception as e:
         progress_bar.empty()
@@ -511,7 +905,7 @@ def _run_evolution(ctx, generations, pop_size, mutation_rate, split_ratio, initi
 def _render_hall_of_fame(ctx: MarketContext, initial_capital: float):
     """Render the Hall of Fame leaderboard."""
     st.markdown("---")
-    st.markdown("### 🏆 Hall of Fame")
+    _section_header("🏆", "Hall of Fame", "Best Strategies")
 
     hall = st.session_state.get("evolution_results", [])
     result = st.session_state.get("evolution_result")
@@ -520,17 +914,35 @@ def _render_hall_of_fame(ctx: MarketContext, initial_capital: float):
         st.info("No strategies found. Try running evolution with more generations.")
         return
 
-    # Walk-forward results
+    # Walk-forward results as styled cards
     if result and result.walk_forward:
         wf = result.walk_forward
+        ratio = wf.overfit_ratio
+        ratio_grade = "good" if ratio > 0.7 else ("warn" if ratio > 0.4 else "bad")
+        ratio_color = GREEN if ratio > 0.7 else (GOLD if ratio > 0.4 else RED)
+
         col1, col2, col3 = st.columns(3)
         with col1:
-            st.metric("Train Sharpe", f"{wf.train_fitness.sharpe_ratio:.3f}")
+            st.markdown(f"""
+            <div class="wf-card good">
+                <div class="wf-label">Train Sharpe</div>
+                <div class="wf-value" style="color: {CYAN};">{wf.train_fitness.sharpe_ratio:.3f}</div>
+            </div>""", unsafe_allow_html=True)
         with col2:
-            st.metric("Test Sharpe", f"{wf.test_fitness.sharpe_ratio:.3f}")
+            test_color = GREEN if wf.test_fitness.sharpe_ratio > 0 else RED
+            st.markdown(f"""
+            <div class="wf-card {'good' if wf.test_fitness.sharpe_ratio > 0 else 'bad'}">
+                <div class="wf-label">Test Sharpe</div>
+                <div class="wf-value" style="color: {test_color};">{wf.test_fitness.sharpe_ratio:.3f}</div>
+            </div>""", unsafe_allow_html=True)
         with col3:
-            overfit_color = "🟢" if wf.overfit_ratio > 0.7 else "🔴"
-            st.metric("Overfit Ratio", f"{overfit_color} {wf.overfit_ratio:.2f}")
+            st.markdown(f"""
+            <div class="wf-card {ratio_grade}">
+                <div class="wf-label">Overfit Ratio</div>
+                <div class="wf-value" style="color: {ratio_color};">{ratio:.2f}</div>
+            </div>""", unsafe_allow_html=True)
+
+    st.markdown("<div style='height: 12px'></div>", unsafe_allow_html=True)
 
     # Leaderboard table
     import pandas as pd
@@ -550,15 +962,15 @@ def _render_hall_of_fame(ctx: MarketContext, initial_capital: float):
         },
     )
 
-    # Visualize selected strategy
+    # Strategy actions
     if hall:
-        st.markdown("### 📊 Strategy Visualization")
         selected = st.selectbox(
-            "Select strategy to visualize",
+            "Select strategy",
             [h["expression"] for h in hall],
+            label_visibility="collapsed",
         )
 
-        col_viz, col_dl = st.columns([1, 1])
+        col_viz, col_dl, col_spacer = st.columns([1, 1, 3])
         with col_viz:
             if selected and st.button("📈 Show Chart", use_container_width=True):
                 _run_lab_backtest(selected, ctx, initial_capital)
@@ -567,12 +979,11 @@ def _render_hall_of_fame(ctx: MarketContext, initial_capital: float):
                 sel_data = next((h for h in hall if h["expression"] == selected), None)
                 if sel_data:
                     json_str = strategy_to_json_string(
-                        selected,
-                        sel_data,
+                        selected, sel_data,
                         name=f"Evolved Strategy #{sel_data.get('rank', 1)}"
                     )
                     st.download_button(
-                        "💾 Download Strategy",
+                        "💾 Download",
                         data=json_str,
                         file_name="evolved_strategy.json",
                         mime="application/json",
@@ -585,41 +996,64 @@ def _render_hall_of_fame(ctx: MarketContext, initial_capital: float):
 # ------------------------------------------------------------------
 
 def render_data_overview(ctx: MarketContext):
-    """Render a data overview section."""
-    st.markdown("### 📋 Data Overview")
+    """Render a compact data overview section."""
 
-    col1, col2, col3, col4 = st.columns(4)
+    # Stats row with styled cards
+    price_min = min(ctx.close)
+    price_max = max(ctx.close)
+    first = float(ctx.close[0])
+    last = float(ctx.close[-1])
+    change = ((last - first) / first) * 100 if first > 0 else 0
+    change_color = GREEN if change >= 0 else RED
+
+    col1, col2, col3, col4, col5 = st.columns(5)
     with col1:
-        st.metric("Total Bars", f"{ctx.total_bars:,}")
+        st.markdown(f"""<div class="data-stat">
+            <div class="stat-label">Total Bars</div>
+            <div class="stat-value">{ctx.total_bars:,}</div>
+        </div>""", unsafe_allow_html=True)
     with col2:
-        st.metric("Price Range", f"${min(ctx.close):,.2f} — ${max(ctx.close):,.2f}")
+        st.markdown(f"""<div class="data-stat">
+            <div class="stat-label">Price Low</div>
+            <div class="stat-value">${price_min:,.2f}</div>
+        </div>""", unsafe_allow_html=True)
     with col3:
-        first = float(ctx.close[0])
-        last = float(ctx.close[-1])
-        change = ((last - first) / first) * 100 if first > 0 else 0
-        st.metric("Period Return", f"{change:+.1f}%")
+        st.markdown(f"""<div class="data-stat">
+            <div class="stat-label">Price High</div>
+            <div class="stat-value">${price_max:,.2f}</div>
+        </div>""", unsafe_allow_html=True)
     with col4:
-        st.metric("Symbol", ctx.symbol or "Generated")
+        st.markdown(f"""<div class="data-stat">
+            <div class="stat-label">Period Return</div>
+            <div class="stat-value" style="color: {change_color};">{change:+.1f}%</div>
+        </div>""", unsafe_allow_html=True)
+    with col5:
+        st.markdown(f"""<div class="data-stat">
+            <div class="stat-label">Symbol</div>
+            <div class="stat-value">{ctx.symbol or 'Generated'}</div>
+        </div>""", unsafe_allow_html=True)
 
-    # Mini price chart
+    # Mini sparkline chart
     fig = go.Figure()
     fig.add_trace(go.Scatter(
         y=list(ctx.close),
         mode="lines",
-        line=dict(color="#00d2ff", width=1.5),
+        line=dict(color=CYAN, width=1.5),
         fill="tozeroy",
-        fillcolor="rgba(0, 210, 255, 0.05)",
+        fillcolor=CYAN_MUTED,
         name="Close",
+        hovertemplate="Bar %{x}<br>Close: $%{y:,.2f}<extra></extra>",
     ))
     fig.update_layout(
         template="plotly_dark",
-        height=200,
+        height=160,
         margin=dict(l=0, r=0, t=0, b=0),
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         showlegend=False,
-        xaxis=dict(showgrid=False, zeroline=False),
-        yaxis=dict(showgrid=True, gridcolor="#1a1a2e", zeroline=False),
+        xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+        yaxis=dict(showgrid=True, gridcolor=BORDER, zeroline=False, showticklabels=False),
+        font=dict(family="Inter, sans-serif"),
     )
     st.plotly_chart(fig, use_container_width=True)
 
@@ -628,32 +1062,91 @@ def render_data_overview(ctx: MarketContext):
 # Available Functions Reference
 # ------------------------------------------------------------------
 
+INDICATOR_DESCRIPTIONS = {
+    "PRICE": "Current close price",
+    "OPEN": "Current bar open price",
+    "HIGH": "Current bar high price",
+    "LOW": "Current bar low price",
+    "VOLUME": "Current bar volume",
+    "close": "Alias for PRICE",
+    "open": "Alias for OPEN",
+    "high": "Alias for HIGH",
+    "low": "Alias for LOW",
+    "volume": "Alias for VOLUME",
+    "SMA": "Simple Moving Average",
+    "EMA": "Exponential Moving Average",
+    "RSI": "Relative Strength Index (0–100)",
+    "ATR": "Average True Range (volatility)",
+    "MACD": "MACD Histogram (>0 bullish)",
+    "BB_UPPER": "Bollinger Band Upper",
+    "BB_LOWER": "Bollinger Band Lower",
+    "STOCH": "Stochastic Oscillator %D (0–100)",
+}
+
+
 def render_function_reference():
-    """Render the available functions reference."""
-    st.markdown("### 📚 Available Functions")
+    """Render the available functions reference as compact cards."""
+    _section_header("📚", "Function Reference", f"{len(INDICATOR_DESCRIPTIONS)} Functions")
 
     registry = get_registry()
     functions = registry.get_available_functions()
 
-    # Group into categories
     accessors = [f for f in functions if not f.arg_schema]
     indicators = [f for f in functions if f.arg_schema]
 
     col1, col2 = st.columns(2)
 
     with col1:
-        st.markdown("**Market Data Accessors**")
+        st.markdown("##### Market Data Accessors")
         for fn in accessors:
-            st.code(fn.name, language=None)
+            desc = INDICATOR_DESCRIPTIONS.get(fn.name, "")
+            st.markdown(f"""<div class="fn-card">
+                <span class="fn-name">{fn.name}</span>
+                <div class="fn-desc">{desc}</div>
+            </div>""", unsafe_allow_html=True)
 
     with col2:
-        st.markdown("**Technical Indicators**")
+        st.markdown("##### Technical Indicators")
         for fn in indicators:
             args_str = ", ".join(
-                f"{a['name']}: {a.get('type', 'float')} = {a.get('default', '?')}"
+                f"{a['name']}={a.get('default', '?')}"
                 for a in fn.arg_schema
             )
-            st.code(f"{fn.name}({args_str})", language=None)
+            desc = INDICATOR_DESCRIPTIONS.get(fn.name, "")
+            st.markdown(f"""<div class="fn-card">
+                <span class="fn-name">{fn.name}</span><span class="fn-args">({args_str})</span>
+                <div class="fn-desc">{desc}</div>
+            </div>""", unsafe_allow_html=True)
+
+    # Cheat sheet
+    st.markdown("---")
+    st.markdown("##### ⚡ Quick Syntax Reference")
+    col_a, col_b, col_c = st.columns(3)
+    with col_a:
+        st.markdown("**Operators**")
+        st.code("AND  OR  NOT\n>  <  >=  <=  ==  !=", language=None)
+    with col_b:
+        st.markdown("**Context Shifting**")
+        st.code("PRICE[1]     # 1 bar ago\nRSI(14)[3]   # 3 bars ago", language=None)
+    with col_c:
+        st.markdown("**Example Strategy**")
+        st.code("EMA(10) > EMA(50)\n  AND EMA(10)[1] <= EMA(50)[1]", language=None)
+
+
+# ------------------------------------------------------------------
+# Helpers
+# ------------------------------------------------------------------
+
+def _section_header(icon: str, title: str, badge: str = ""):
+    """Render a styled section header."""
+    badge_html = f'<span class="badge">{badge}</span>' if badge else ""
+    st.markdown(f"""
+    <div class="section-header">
+        <span class="icon">{icon}</span>
+        <span class="title">{title}</span>
+        {badge_html}
+    </div>
+    """, unsafe_allow_html=True)
 
 
 # ------------------------------------------------------------------
@@ -662,14 +1155,15 @@ def render_function_reference():
 
 def main():
     """Main application entry point."""
-    # Sidebar
     ctx, initial_capital = render_sidebar()
 
     # Header
     st.markdown("""
-    # 📈 LECAT — Quantitative Dashboard
-    *Logical Expression Compiler for Algorithmic Trading*
-    """)
+    <div class="dashboard-header">
+        <h1>📈 LECAT</h1>
+        <div class="subtitle">Logical Expression Compiler for Algorithmic Trading</div>
+    </div>
+    """, unsafe_allow_html=True)
 
     if ctx is None:
         st.warning("⬅️ Please upload data or generate random data from the sidebar to begin.")
@@ -677,8 +1171,6 @@ def main():
 
     # Data overview
     render_data_overview(ctx)
-
-    st.markdown("---")
 
     # Mode tabs
     tab_lab, tab_evolution, tab_reference = st.tabs([
