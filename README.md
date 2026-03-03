@@ -23,6 +23,7 @@ RSI(14)[1] > 70 AND (close > open)[1]
 | **Phase 3** — Optimization & Evolution | Sprint 1 — Genetic Engine | ✅ Complete |
 | **Phase 3** — Optimization & Evolution | Sprint 2 — Data & Validation | ✅ Complete |
 | **Phase 3** — Optimization & Evolution | Sprint 3 — Performance & Indicators | ✅ Complete |
+| **Phase 4** — Interface & Deployment | Sprint 1 — Web Dashboard | ✅ Complete |
 
 ---
 
@@ -102,7 +103,9 @@ stockstats-lecat/
 │   ├── optimizer.py          # GA loop with walk-forward + parallel eval
 │   ├── parallel.py           # Multi-core batch evaluation (ThreadPoolExecutor)
 │   ├── data_loader.py        # CSV/DataFrame ingestion into MarketContext
-│   └── reporting.py          # Equity curve charts and text reports
+│   ├── reporting.py          # Equity curve charts and text reports
+│   └── dashboard/
+│       └── app.py            # Streamlit web dashboard
 ├── tests/                    # Unit tests (220 tests)
 │   ├── test_lexer.py         # Lexer tests (31 tests)
 │   ├── test_parser.py        # Parser tests (39 tests)
@@ -122,7 +125,8 @@ stockstats-lecat/
 │   ├── 02_System_Architecture.md
 │   ├── 03_Function_Registry_API.md
 │   ├── 04_Error_Handling.md
-│   └── 05_Integration_Strategy.md
+│   ├── 05_Integration_Strategy.md
+│   └── 06_Operations_Manual.md
 ├── README.md
 └── LICENSE
 ```

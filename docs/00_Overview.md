@@ -1,9 +1,9 @@
 # LECAT — System Design Document (SDD) & Software Requirements Specification (SRS)
 
 **Project:** Logical Expression Compiler for Algorithmic Trading (LECAT)
-**Version:** 1.0
+**Version:** 2.0
 **Date:** March 3, 2026
-**Phase:** 1 — Requirements & Specification
+**Phase:** 4 — Interface & Deployment
 **Standards:** IEEE 830 (SRS), EBNF (Grammar), C4 Model (Architecture)
 
 ---
@@ -33,6 +33,7 @@ This documentation suite is organized into the following files:
 | 03 | [Function Registry API](./03_Function_Registry_API.md) | Plugin registration contract and context passing |
 | 04 | [Error Handling](./04_Error_Handling.md) | Error taxonomy, edge cases, and safety guarantees |
 | 05 | [Integration Strategy](./05_Integration_Strategy.md) | Optimizer hook interface and BacktestResult schema |
+| 06 | [Operations Manual](./06_Operations_Manual.md) | Installation, CLI usage, dashboard, and deployment |
 
 ---
 
@@ -87,16 +88,25 @@ No randomness, no external I/O, no side effects during evaluation. The compiler 
 
 ## 5. Scope Boundaries
 
-### In Scope (Phase 1)
+### Implemented
 - Grammar definition and formal specification
 - Architecture design with component interfaces
-- Function registry plugin pattern
+- Function registry plugin pattern (standard + extended indicators)
 - Error handling taxonomy
 - Optimizer integration interface
+- Full compiler pipeline (Lexer → Parser → AST → Evaluator)
+- Context Shifting (CR-001)
+- Backtesting engine with signal statistics
+- Random expression generator
+- Genetic Algorithm optimizer with walk-forward validation
+- CSV data loader with column alias resolution
+- Equity curve reporting (matplotlib + Plotly)
+- Multi-core parallel evaluation
+- Extended indicators (MACD, BB_UPPER, BB_LOWER, STOCH)
+- Interactive web dashboard (Streamlit)
 
-### Out of Scope (Phase 1)
-- Implementation code
-- Backtesting engine (separate system)
-- Data ingestion / market data feeds
-- User interface / CLI
-- Specific indicator implementations (only the *interface* is defined)
+### Out of Scope
+- Live data feeds / real-time streaming
+- Order execution / broker integration
+- Multi-asset portfolio optimization
+- Neural network strategy generation
