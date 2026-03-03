@@ -9,9 +9,10 @@
   </p>
   <p align="center">
     <img src="https://img.shields.io/badge/python-3.9%2B-blue?style=flat-square" alt="Python 3.9+">
-    <img src="https://img.shields.io/badge/tests-235%20passing-brightgreen?style=flat-square" alt="Tests">
-    <img src="https://img.shields.io/badge/version-2.0.0-orange?style=flat-square" alt="Version">
+    <img src="https://img.shields.io/badge/tests-257%20passing-brightgreen?style=flat-square" alt="Tests">
+    <img src="https://img.shields.io/badge/version-2.1.1-orange?style=flat-square" alt="Version">
     <img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="License">
+    <img src="https://img.shields.io/github/actions/workflow/status/racoya/stockstats-lecat/build_release.yml?style=flat-square&label=release%20build" alt="Release Build">
   </p>
 </p>
 
@@ -22,13 +23,16 @@
 | Feature | Description |
 |---------|-------------|
 | 🧠 **DSL Compiler** | Write strategies like `RSI(14) > 70 AND PRICE > SMA(50)` — no code needed |
-| ⏪ **Time-Travel** | Look back in time with `[n]` offsets: `EMA(10)[1] <= EMA(50)[1]` for crossover detection |
+| ⏪ **Time-Travel** | Look back with `[n]` offsets: `EMA(10)[1] <= EMA(50)[1]` for crossover detection |
 | 🧬 **Genetic Engine** | Automatically evolve profitable strategies via mutation, crossover, and tournament selection |
 | 📊 **Web Dashboard** | Interactive Streamlit GUI with Plotly candlestick charts, metrics, and strategy presets |
 | ⚡ **Parallel Evaluation** | Multi-core backtesting via ThreadPoolExecutor for 2–6x speedup |
 | 📈 **8 Built-in Indicators** | SMA, EMA, RSI, ATR, MACD, Bollinger Bands, Stochastic Oscillator |
 | 🔁 **Walk-Forward Validation** | Train/test split prevents overfitting; overfit ratio measures generalization |
-| 💾 **Strategy Persistence** | Save and load strategies as JSON for sharing and reproducibility |
+| 💾 **SQLite Persistence** | Market data, custom indicators, and optimization history stored in a local database |
+| 🛠️ **Indicator Manager** | Create, test, and save custom composite indicators directly from the dashboard UI |
+| 🐍 **Python Plugin System** | Drop `.py` files into `lecat_plugins/` for complex math (log returns, custom vol, etc.) |
+| 🖥️ **Desktop App** | Standalone Windows & macOS executable — no Python required for end users |
 
 ---
 
@@ -36,6 +40,8 @@
 
 ### Option 1: Standalone Desktop App (Easiest)
 Download the standalone executable (no Python required) for Windows or macOS from the [Releases page](https://github.com/racoya/stockstats-lecat/releases). Extract the `.zip` file and double-click `LECAT_Trader`.
+
+> **Data persistence:** All uploaded data, custom indicators, and logs are saved to `~/.lecat/` so your work is never lost between sessions.
 
 ### Option 2: Run from Source (For Developers)
 
@@ -55,14 +61,15 @@ python -m lecat.main --generations 10 --strategies 100 --cores 4
 
 ## 🖥️ Dashboard
 
-<!-- Screenshot placeholder -->
-<!-- ![Dashboard Screenshot](docs/assets/dashboard.png) -->
+The interactive web dashboard provides five tabs:
 
-The interactive web dashboard provides two modes:
-
-**🔬 Strategy Lab** — Type any expression, click Run, and see an interactive candlestick chart with buy/sell signal markers, metrics (Return, Sharpe, Win Rate, Drawdown), and a JSON download button.
-
-**🧬 Evolution Engine** — Configure the genetic algorithm (generations, population, mutation rate, train/test split), click Start, and watch the Hall of Fame populate with the best strategies found.
+| Tab | Description |
+|-----|-------------|
+| **🔬 Strategy Lab** | Type any expression, click Run, see candlestick chart with buy/sell markers and metrics |
+| **🧬 Evolution Engine** | Run the genetic optimizer and watch the Hall of Fame populate in real time |
+| **🛠️ Indicator Manager** | Create, test, and save custom composite indicators backed by the database |
+| **📚 Function Reference** | Browse all available built-in and plugin indicators with syntax and examples |
+| **📊 Results** | View and compare historical backtest results |
 
 ---
 
@@ -85,7 +92,7 @@ AND  OR  NOT                    # Boolean logic
 PRICE  OPEN  HIGH  LOW  VOLUME  # Current bar values
 ```
 
-### Indicators
+### Built-in Indicators
 ```
 SMA(20)                         # Simple Moving Average
 EMA(20)                         # Exponential Moving Average
@@ -113,6 +120,34 @@ MACD(12, 26, 9) > 0 AND RSI(14) > 50 AND RSI(14) < 80  # Momentum filter
 
 ---
 
+## 🐍 Python Plugins (Complex Math)
+
+For indicators that need full mathematical power (logarithms, volatility, custom models), drop a `.py` file into the `lecat_plugins/` folder:
+
+```python
+# lecat_plugins/my_math.py
+from lecat.registry import FunctionRegistry, FunctionResult
+from lecat.context import MarketContext
+import math
+
+def register_plugin(registry: FunctionRegistry) -> None:
+    @registry.register(
+        name="LOG_RETURN",
+        description="Logarithmic return over N periods (%).",
+        arg_schema=[{"name": "period", "type": "integer", "default": 1}],
+        min_bars_required=lambda args: args.get("period", 1) + 1,
+    )
+    def handler(args: dict, ctx: MarketContext) -> FunctionResult:
+        p = int(args["period"])
+        return FunctionResult.success(
+            math.log(ctx.close[ctx.bar_index] / ctx.close[ctx.bar_index - p]) * 100
+        )
+```
+
+Plugins are auto-discovered at startup and immediately available in all dashboard tabs. Two example plugins are included: `HALF_SMA` and `LOG_RETURN`.
+
+---
+
 ## 🏗️ Architecture
 
 ```mermaid
@@ -123,7 +158,7 @@ graph LR
     D --> E["📊 Backtester"]
     E --> F["📈 Fitness"]
 
-    G["📚 Registry<br/><i>SMA, RSI, MACD...</i>"] --> D
+    G["📚 Registry<br/><i>Built-ins + Plugins + DB</i>"] --> D
     H["📉 Market Data<br/><i>OHLCV Bars</i>"] --> D
 
     F --> I["🧬 Optimizer<br/><i>Genetic Algorithm</i>"]
@@ -141,7 +176,7 @@ The compiler pipeline: **String → Tokens → AST → Evaluator → Signals →
 
 ```
 stockstats-lecat/
-├── lecat/                        # Core engine (stdlib only)
+├── lecat/                        # Core engine
 │   ├── lexer.py                  # Tokenizer
 │   ├── parser.py                 # Recursive descent parser
 │   ├── ast_nodes.py              # Immutable AST nodes
@@ -150,6 +185,9 @@ stockstats-lecat/
 │   ├── registry.py               # Function plugin registry
 │   ├── std_lib.py                # Built-in indicators
 │   ├── indicators.py             # Extended indicators (MACD, BB, STOCH)
+│   ├── dynamic_registry.py       # DB-backed + plugin indicator loader
+│   ├── plugin_loader.py          # Auto-discovers lecat_plugins/ at startup
+│   ├── repository.py             # SQLite CRUD (market data, indicators, results)
 │   ├── cache.py                  # Cross-bar indicator memoization
 │   ├── generator.py              # Random expression generator
 │   ├── backtester.py             # Time-loop backtesting engine
@@ -157,28 +195,32 @@ stockstats-lecat/
 │   ├── evolution.py              # Genetic operators
 │   ├── optimizer.py              # GA loop + walk-forward
 │   ├── parallel.py               # Multi-core batch evaluator
-│   ├── data_loader.py            # CSV ingestion
+│   ├── data_loader.py            # CSV / DB ingestion
 │   ├── reporting.py              # Equity curve charts
 │   ├── exporter.py               # Strategy JSON save/load
 │   ├── logger.py                 # Structured logging
 │   ├── main.py                   # CLI entry point
 │   └── dashboard/
-│       └── app.py                # Streamlit web dashboard
-├── tests/                        # 235 unit tests
-│   ├── test_lexer.py             # 31 tests
-│   ├── test_parser.py            # 39 tests
-│   ├── test_registry.py          # 15 tests
-│   ├── test_evaluator.py         # 41 tests
-│   ├── test_generator.py         # 10 tests
-│   ├── test_backtester.py        # 14 tests
-│   ├── test_fitness.py           # 10 tests
-│   ├── test_evolution.py         # 18 tests
-│   ├── test_data_loader.py       # 12 tests
-│   ├── test_reporting.py         # 8 tests
-│   ├── test_indicators.py        # 13 tests
-│   ├── test_parallel.py          # 9 tests
-│   └── test_persistence.py       # 15 tests
-├── docs/                         # Documentation (SDD/SRS)
+│       └── app.py                # Streamlit web dashboard (5 tabs)
+├── lecat_plugins/                # Drop-in Python math plugins
+│   └── math_utils.py             # Example: HALF_SMA, LOG_RETURN
+├── tests/                        # 257 unit tests
+│   ├── test_lexer.py
+│   ├── test_parser.py
+│   ├── test_registry.py
+│   ├── test_evaluator.py
+│   ├── test_generator.py
+│   ├── test_backtester.py
+│   ├── test_fitness.py
+│   ├── test_evolution.py
+│   ├── test_data_loader.py
+│   ├── test_reporting.py
+│   ├── test_indicators.py
+│   ├── test_parallel.py
+│   ├── test_persistence.py
+│   ├── test_database.py          # 19 DB integration tests
+│   └── test_plugin_loader.py     # Plugin system tests
+├── docs/                         # Full documentation package
 │   ├── 00_Overview.md
 │   ├── 01_Grammar_Specification.md
 │   ├── 02_System_Architecture.md
@@ -186,6 +228,10 @@ stockstats-lecat/
 │   ├── 04_Error_Handling.md
 │   ├── 05_Integration_Strategy.md
 │   └── 06_Operations_Manual.md
+├── .github/workflows/
+│   └── build_release.yml         # Auto-builds Windows & macOS on tag push
+├── run_desktop.py                # Desktop app bootstrapper
+├── lecat.spec                    # PyInstaller build specification
 ├── pyproject.toml                # Python packaging
 ├── requirements.txt              # Dependencies
 ├── Makefile                      # Developer shortcuts
@@ -210,6 +256,9 @@ make format
 # Launch dashboard
 make run
 
+# Build standalone desktop executable (requires PyInstaller)
+make build-desktop
+
 # Clean build artifacts
 make clean
 ```
@@ -232,6 +281,9 @@ See the full [Operations Manual](docs/06_Operations_Manual.md) for detailed usag
 | **Phase 4** — Interface & Deployment | Sprint 1 — Web Dashboard | ✅ Complete |
 | **Phase 4** — Interface & Deployment | Sprint 2 — Persistence & Packaging | ✅ Complete |
 | **Phase 5** — Release Engineering | Final Polish & Handoff | ✅ Complete |
+| **Phase 6** — Database & Extensibility | Sprint 1 — SQLite + Indicator Manager | ✅ Complete |
+| **Phase 6** — Database & Extensibility | Sprint 2 — Python Plugin System | ✅ Complete |
+| **Phase 7** — Deployment | Sprint 1 — Desktop Packaging (Win/Mac) | ✅ Complete |
 
 ---
 
