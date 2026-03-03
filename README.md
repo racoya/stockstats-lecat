@@ -18,7 +18,7 @@ RSI(14)[1] > 70 AND (close > open)[1]
 |-------|--------|--------|
 | **Phase 1** — Requirements & Specification | — | ✅ Complete |
 | **Phase 2** — Core Implementation | Sprint 1 — Compiler Frontend | ✅ Complete |
-| **Phase 2** — Core Implementation | Sprint 2 — Evaluator & Registry | 🔲 Not started |
+| **Phase 2** — Core Implementation | Sprint 2 — Evaluator & Registry | ✅ Complete |
 
 ---
 
@@ -29,20 +29,33 @@ RSI(14)[1] > 70 AND (close > open)[1]
 ```python
 from lecat.lexer import Lexer
 from lecat.parser import Parser
+from lecat.evaluator import Evaluator
+from lecat.registry import FunctionRegistry
+from lecat.std_lib import register_std_lib
+from lecat.context import MarketContext
 
-# Parse a trading strategy expression
-source = "RSI(14) > 80 AND PRICE > SMA(50)"
+# 1. Set up the registry with built-in indicators
+registry = FunctionRegistry()
+register_std_lib(registry)
+
+# 2. Parse a trading strategy expression
+source = "PRICE > SMA(3) AND PRICE[1] <= SMA(3)[1]"
 tokens = Lexer(source).tokenize()
 ast = Parser(tokens).parse()
 
-print(ast)
-# BinaryOpNode(operator='AND',
-#   left=ComparisonNode(operator='>',
-#     left=FunctionCallNode(name='RSI', arguments=(LiteralNode(value=14, ...),)),
-#     right=LiteralNode(value=80, ...)),
-#   right=ComparisonNode(operator='>',
-#     left=IdentifierNode(name='PRICE'),
-#     right=FunctionCallNode(name='SMA', arguments=(LiteralNode(value=50, ...),))))
+# 3. Evaluate against market data
+context = MarketContext(
+    open=[9.0, 10.0, 11.0, 12.0, 13.0],
+    high=[11.0, 12.0, 13.0, 14.0, 15.0],
+    low=[8.0, 9.0, 10.0, 11.0, 12.0],
+    close=[10.0, 11.0, 12.0, 13.0, 14.0],
+    volume=[100.0] * 5,
+    bar_index=4,
+)
+
+evaluator = Evaluator(registry)
+result = evaluator.evaluate(ast, context)
+print(f"Signal: {result.value}")  # 1.0 (True) or 0.0 (False)
 ```
 
 ### Running Tests
@@ -63,10 +76,16 @@ stockstats-lecat/
 │   ├── tokens.py             # TokenType enum, Token dataclass
 │   ├── ast_nodes.py          # Immutable AST node dataclasses (frozen=True)
 │   ├── lexer.py              # Tokenizer — string → token stream
-│   └── parser.py             # Recursive descent parser — tokens → AST
-├── tests/                    # Unit tests (70 tests)
+│   ├── parser.py             # Recursive descent parser — tokens → AST
+│   ├── context.py            # MarketContext (OHLCV data + bar position)
+│   ├── registry.py           # FunctionRegistry with @register decorator
+│   ├── evaluator.py          # Tree-walking AST evaluator
+│   └── std_lib.py            # Built-in indicators (PRICE, SMA, EMA, RSI, ATR)
+├── tests/                    # Unit tests (126 tests)
 │   ├── test_lexer.py         # Lexer tests (31 tests)
-│   └── test_parser.py        # Parser tests (39 tests)
+│   ├── test_parser.py        # Parser tests (39 tests)
+│   ├── test_registry.py      # Registry tests (15 tests)
+│   └── test_evaluator.py     # Evaluator tests (41 tests)
 ├── docs/                     # System design documentation (SDD/SRS)
 │   ├── 00_Overview.md
 │   ├── 01_Grammar_Specification.md
