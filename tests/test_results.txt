@@ -498,3 +498,248 @@ racoya@Rodneys-MacBook-Pro stockstats-lecat % python3 -m lecat.main --strategies
 
 racoya@Rodneys-MacBook-Pro stockstats-lecat % 
 
+racoya@Rodneys-MacBook-Pro stockstats-lecat % python3 -m unittest discover -s tests -v 2>&1
+test_case_b_backtest_consistency (test_backtester.TestAcceptanceCriteria.test_case_b_backtest_consistency)
+Case B: PRICE > 10 with [11, 9, 12, 8, 15] ... ok
+test_case_c_performance_benchmark (test_backtester.TestAcceptanceCriteria.test_case_c_performance_benchmark)
+Case C: Complex strategy over 10,000 bars under 1.0 second. ... ok
+test_all_bars_evaluated (test_backtester.TestBacktester.test_all_bars_evaluated) ... ok
+test_backtest_result_is_frozen (test_backtester.TestBacktester.test_backtest_result_is_frozen) ... ok
+test_context_shifting_in_backtest (test_backtester.TestBacktester.test_context_shifting_in_backtest)
+PRICE[1] should access previous bar during backtest. ... ok
+test_result_contains_expression (test_backtester.TestBacktester.test_result_contains_expression) ... ok
+test_result_contains_timing (test_backtester.TestBacktester.test_result_contains_timing) ... ok
+test_warmup_handling (test_backtester.TestBacktester.test_warmup_handling)
+SMA(3) needs 3 bars warmup — first 2 bars should be False. ... ok
+test_generated_strategy_backtests (test_backtester.TestIntegration.test_generated_strategy_backtests)
+Generate 10 strategies, compile and backtest each. ... ok
+test_all_false (test_backtester.TestStats.test_all_false) ... ok
+test_all_true (test_backtester.TestStats.test_all_true) ... ok
+test_empty (test_backtester.TestStats.test_empty) ... ok
+test_mixed (test_backtester.TestStats.test_mixed) ... ok
+test_repr (test_backtester.TestStats.test_repr) ... ok
+test_warmup_excluded (test_backtester.TestStats.test_warmup_excluded) ... ok
+test_case_a_basic_execution (test_evaluator.TestAcceptanceCriteria.test_case_a_basic_execution)
+Case A: close=[10,11,12,13,14], bar_index=4. ... ok
+test_case_b_context_shifting (test_evaluator.TestAcceptanceCriteria.test_case_b_context_shifting)
+Case B: PRICE[1] > 12. ... ok
+test_case_c_deep_shift (test_evaluator.TestAcceptanceCriteria.test_case_c_deep_shift)
+Case C: PRICE[2] == 12. ... ok
+test_case_d_out_of_bounds (test_evaluator.TestAcceptanceCriteria.test_case_d_out_of_bounds)
+Case D: PRICE[10] — past bar_index 4 by 10 → insufficient data. ... ok
+test_compound_logic_with_offset (test_evaluator.TestComplexExpressions.test_compound_logic_with_offset)
+PRICE > 12 AND PRICE[1] < 12 ... ok
+test_crossover_detection (test_evaluator.TestComplexExpressions.test_crossover_detection)
+SMA(2) > SMA(3) AND SMA(2)[1] <= SMA(3)[1] ... ok
+test_and_both_true (test_evaluator.TestEvalBooleanLogic.test_and_both_true) ... ok
+test_and_one_false (test_evaluator.TestEvalBooleanLogic.test_and_one_false) ... ok
+test_not (test_evaluator.TestEvalBooleanLogic.test_not) ... ok
+test_or_both_false (test_evaluator.TestEvalBooleanLogic.test_or_both_false) ... ok
+test_or_one_true (test_evaluator.TestEvalBooleanLogic.test_or_one_true) ... ok
+test_eq_with_epsilon (test_evaluator.TestEvalComparisons.test_eq_with_epsilon) ... ok
+test_gt_false (test_evaluator.TestEvalComparisons.test_gt_false) ... ok
+test_gt_true (test_evaluator.TestEvalComparisons.test_gt_true) ... ok
+test_gte (test_evaluator.TestEvalComparisons.test_gte) ... ok
+test_lt (test_evaluator.TestEvalComparisons.test_lt) ... ok
+test_lte (test_evaluator.TestEvalComparisons.test_lte) ... ok
+test_neq (test_evaluator.TestEvalComparisons.test_neq) ... ok
+test_function_offset (test_evaluator.TestEvalContextShifting.test_function_offset)
+SMA(2)[1] — SMA at previous bar. ... ok
+test_grouped_expression_offset (test_evaluator.TestEvalContextShifting.test_grouped_expression_offset)
+(close > open)[1] — green candle check at previous bar. ... ok
+test_price_shift_1 (test_evaluator.TestEvalContextShifting.test_price_shift_1) ... ok
+test_price_shift_2 (test_evaluator.TestEvalContextShifting.test_price_shift_2) ... ok
+test_shift_out_of_bounds (test_evaluator.TestEvalContextShifting.test_shift_out_of_bounds) ... ok
+test_zero_offset (test_evaluator.TestEvalContextShifting.test_zero_offset)
+PRICE[0] should equal PRICE. ... ok
+test_price_function_call (test_evaluator.TestEvalFunctions.test_price_function_call) ... ok
+test_sma (test_evaluator.TestEvalFunctions.test_sma) ... ok
+test_sma_comparison (test_evaluator.TestEvalFunctions.test_sma_comparison) ... ok
+test_sma_insufficient_data (test_evaluator.TestEvalFunctions.test_sma_insufficient_data) ... ok
+test_close_lowercase (test_evaluator.TestEvalIdentifiers.test_close_lowercase) ... ok
+test_price_identifier (test_evaluator.TestEvalIdentifiers.test_price_identifier) ... ok
+test_boolean_false (test_evaluator.TestEvalLiterals.test_boolean_false) ... ok
+test_boolean_true (test_evaluator.TestEvalLiterals.test_boolean_true) ... ok
+test_float (test_evaluator.TestEvalLiterals.test_float) ... ok
+test_integer (test_evaluator.TestEvalLiterals.test_integer) ... ok
+test_signal_series (test_evaluator.TestEvalSeries.test_signal_series) ... ok
+test_creation (test_evaluator.TestMarketContext.test_creation) ... ok
+test_get_window (test_evaluator.TestMarketContext.test_get_window) ... ok
+test_get_window_insufficient (test_evaluator.TestMarketContext.test_get_window_insufficient) ... ok
+test_immutability (test_evaluator.TestMarketContext.test_immutability) ... ok
+test_with_index (test_evaluator.TestMarketContext.test_with_index) ... ok
+test_with_index_look_ahead_error (test_evaluator.TestMarketContext.test_with_index_look_ahead_error) ... ok
+test_with_index_negative_error (test_evaluator.TestMarketContext.test_with_index_negative_error) ... ok
+test_case_a_mutation_validity (test_evolution.TestAcceptanceCriteria.test_case_a_mutation_validity)
+Case A: Mutate RSI(14) > 50 100 times, all must be valid ASTs. ... ok
+test_case_b_crossover_validity (test_evolution.TestAcceptanceCriteria.test_case_b_crossover_validity)
+Case B: Crossover RSI(14) > 50 with PRICE > SMA(200). ... ok
+test_case_c_improvement_over_generations (test_evolution.TestAcceptanceCriteria.test_case_c_improvement_over_generations)
+Case C: Best fitness at gen 10 >= best fitness at gen 0. ... ok
+test_round_trip_complex (test_evolution.TestAstToString.test_round_trip_complex) ... ok
+test_round_trip_not (test_evolution.TestAstToString.test_round_trip_not) ... ok
+test_round_trip_offset (test_evolution.TestAstToString.test_round_trip_offset) ... ok
+test_round_trip_simple (test_evolution.TestAstToString.test_round_trip_simple) ... ok
+test_crossover_different_parents (test_evolution.TestCrossover.test_crossover_different_parents)
+Crossover of different parents should sometimes produce novel ASTs. ... ok
+test_crossover_produces_valid_ast (test_evolution.TestCrossover.test_crossover_produces_valid_ast) ... ok
+test_crossover_with_leaf (test_evolution.TestCrossover.test_crossover_with_leaf)
+Crossover where one parent is a leaf node. ... ok
+test_mutation_of_simple_ast (test_evolution.TestMutation.test_mutation_of_simple_ast)
+Mutation of a very simple AST should not crash. ... ok
+test_mutation_preserves_validity (test_evolution.TestMutation.test_mutation_preserves_validity)
+All mutations should produce valid ASTs. ... ok
+test_parameter_mutation (test_evolution.TestMutation.test_parameter_mutation)
+Mutated AST should sometimes have different numeric values. ... ok
+test_collect_complex (test_evolution.TestNodeCollection.test_collect_complex) ... ok
+test_collect_leaf_nodes (test_evolution.TestNodeCollection.test_collect_leaf_nodes) ... ok
+test_tournament_pressure (test_evolution.TestSelection.test_tournament_pressure)
+Higher k → more selective pressure → fitter individuals more often. ... ok
+test_tournament_returns_individual (test_evolution.TestSelection.test_tournament_returns_individual) ... ok
+test_tournament_selects_fittest (test_evolution.TestSelection.test_tournament_selects_fittest)
+With k=population size, should always return the fittest. ... ok
+test_fitness_repr (test_fitness.TestFitnessCalculation.test_fitness_repr) ... ok
+test_fitness_result_is_frozen (test_fitness.TestFitnessCalculation.test_fitness_result_is_frozen) ... ok
+test_no_trades_penalty (test_fitness.TestFitnessCalculation.test_no_trades_penalty) ... ok
+test_profitable_strategy (test_fitness.TestFitnessCalculation.test_profitable_strategy) ... ok
+test_win_rate (test_fitness.TestFitnessCalculation.test_win_rate) ... ok
+test_less_than_5_trades_penalized (test_fitness.TestLowTradesPenalty.test_less_than_5_trades_penalized)
+Strategies with < 5 trades should have reduced fitness. ... ok
+test_all_true_single_trade (test_fitness.TestTradeSimulation.test_all_true_single_trade)
+All True → one open trade, closed at end. ... ok
+test_buy_sell_signal (test_fitness.TestTradeSimulation.test_buy_sell_signal)
+True → buy, False → sell. ... ok
+test_no_signals_no_trades (test_fitness.TestTradeSimulation.test_no_signals_no_trades) ... ok
+test_trade_return_calculation (test_fitness.TestTradeSimulation.test_trade_return_calculation) ... ok
+test_batch_generation (test_generator.TestGeneratorFeatures.test_batch_generation)
+generate_batch produces unique expressions. ... ok
+test_contains_offsets (test_generator.TestGeneratorFeatures.test_contains_offsets)
+With offset_probability > 0, some expressions should contain [n]. ... ok
+test_different_seeds_differ (test_generator.TestGeneratorFeatures.test_different_seeds_differ)
+Different seeds should produce different expressions. ... ok
+test_output_is_string (test_generator.TestGeneratorFeatures.test_output_is_string) ... ok
+test_seed_reproducibility (test_generator.TestGeneratorFeatures.test_seed_reproducibility)
+Same seed should produce identical expressions. ... ok
+test_zero_offset_probability (test_generator.TestGeneratorFeatures.test_zero_offset_probability)
+With offset_probability=0, no offsets should appear. ... ok
+test_100_random_strategies_compile (test_generator.TestGeneratorValidity.test_100_random_strategies_compile)
+Generate 100 strategies; all must parse successfully. ... ok
+test_depth_1 (test_generator.TestGeneratorValidity.test_depth_1)
+Low depth should produce simple expressions. ... ok
+test_depth_4 (test_generator.TestGeneratorValidity.test_depth_4)
+High depth should still produce valid expressions. ... ok
+test_boolean_false (test_lexer.TestLexerBasics.test_boolean_false) ... ok
+test_boolean_true (test_lexer.TestLexerBasics.test_boolean_true) ... ok
+test_float_literal (test_lexer.TestLexerBasics.test_float_literal) ... ok
+test_identifier (test_lexer.TestLexerBasics.test_identifier) ... ok
+test_identifier_preserves_case (test_lexer.TestLexerBasics.test_identifier_preserves_case) ... ok
+test_integer_literal (test_lexer.TestLexerBasics.test_integer_literal) ... ok
+test_eof_always_appended (test_lexer.TestLexerErrors.test_eof_always_appended) ... ok
+test_max_length_exceeded (test_lexer.TestLexerErrors.test_max_length_exceeded) ... ok
+test_trailing_dot (test_lexer.TestLexerErrors.test_trailing_dot) ... ok
+test_unrecognized_character (test_lexer.TestLexerErrors.test_unrecognized_character) ... ok
+test_compound_and (test_lexer.TestLexerFullExpressions.test_compound_and)
+RSI(14) > 80 AND PRICE > SMA(50) ... ok
+test_context_shifting (test_lexer.TestLexerFullExpressions.test_context_shifting)
+RSI(14)[1] > 70 ... ok
+test_multi_arg_function (test_lexer.TestLexerFullExpressions.test_multi_arg_function)
+MACD(12, 26, 9) ... ok
+test_rsi_comparison (test_lexer.TestLexerFullExpressions.test_rsi_comparison)
+RSI(14) > 80 ... ok
+test_whitespace_is_ignored (test_lexer.TestLexerFullExpressions.test_whitespace_is_ignored)
+Tabs and spaces should be skipped. ... ok
+test_and_keyword (test_lexer.TestLexerKeywords.test_and_keyword) ... ok
+test_case_insensitive_and (test_lexer.TestLexerKeywords.test_case_insensitive_and) ... ok
+test_case_insensitive_or (test_lexer.TestLexerKeywords.test_case_insensitive_or) ... ok
+test_case_insensitive_true (test_lexer.TestLexerKeywords.test_case_insensitive_true) ... ok
+test_not_keyword (test_lexer.TestLexerKeywords.test_not_keyword) ... ok
+test_or_keyword (test_lexer.TestLexerKeywords.test_or_keyword) ... ok
+test_eq (test_lexer.TestLexerOperators.test_eq) ... ok
+test_gt (test_lexer.TestLexerOperators.test_gt) ... ok
+test_gte (test_lexer.TestLexerOperators.test_gte) ... ok
+test_lt (test_lexer.TestLexerOperators.test_lt) ... ok
+test_lte (test_lexer.TestLexerOperators.test_lte) ... ok
+test_neq (test_lexer.TestLexerOperators.test_neq) ... ok
+test_brackets (test_lexer.TestLexerPunctuation.test_brackets) ... ok
+test_comma (test_lexer.TestLexerPunctuation.test_comma) ... ok
+test_minus (test_lexer.TestLexerPunctuation.test_minus) ... ok
+test_parentheses (test_lexer.TestLexerPunctuation.test_parentheses) ... ok
+test_case_a_basic_logic (test_parser.TestAcceptanceCriteria.test_case_a_basic_logic)
+Case A: RSI(14) > 80 AND PRICE > SMA(50) ... ok
+test_case_b_context_shifting (test_parser.TestAcceptanceCriteria.test_case_b_context_shifting)
+Case B: (close > open)[1] ... ok
+test_case_c_precedence (test_parser.TestAcceptanceCriteria.test_case_c_precedence)
+Case C: A OR B AND C ... ok
+test_case_d_negative_offset_error (test_parser.TestAcceptanceCriteria.test_case_d_negative_offset_error)
+Case D: RSI(14)[-1] ... ok
+test_and (test_parser.TestBinaryOperators.test_and) ... ok
+test_and_binds_tighter_than_or (test_parser.TestBinaryOperators.test_and_binds_tighter_than_or)
+A OR B AND C → OR(A, AND(B, C)) ... ok
+test_chained_and (test_parser.TestBinaryOperators.test_chained_and)
+A AND B AND C → AND(AND(A, B), C) (left-associative) ... ok
+test_or (test_parser.TestBinaryOperators.test_or) ... ok
+test_parentheses_override_precedence (test_parser.TestBinaryOperators.test_parentheses_override_precedence)
+(A OR B) AND C → AND(OR(A, B), C) ... ok
+test_all_operators (test_parser.TestComparisons.test_all_operators) ... ok
+test_chained_comparison_error (test_parser.TestComparisons.test_chained_comparison_error)
+A > B > C should raise ParserError (non-associative). ... ok
+test_ema_crossover_with_offset (test_parser.TestComplexExpressions.test_ema_crossover_with_offset)
+EMA(10) > EMA(50) AND EMA(10)[1] <= EMA(50)[1] ... ok
+test_full_strategy (test_parser.TestComplexExpressions.test_full_strategy)
+NOT (VOLUME < SMA_VOL(20)) OR MACD(12, 26, 9) > 0 ... ok
+test_immutability (test_parser.TestComplexExpressions.test_immutability)
+AST nodes must be immutable (frozen=True). ... ok
+test_float_offset_error (test_parser.TestContextShifting.test_float_offset_error) ... ok
+test_function_offset (test_parser.TestContextShifting.test_function_offset)
+RSI(14)[1] → OffsetNode wrapping FunctionCallNode ... ok
+test_grouped_expression_offset (test_parser.TestContextShifting.test_grouped_expression_offset)
+(close > open)[1] ... ok
+test_identifier_offset (test_parser.TestContextShifting.test_identifier_offset)
+PRICE[5] → OffsetNode wrapping IdentifierNode ... ok
+test_negative_offset_error (test_parser.TestContextShifting.test_negative_offset_error) ... ok
+test_offset_in_larger_expression (test_parser.TestContextShifting.test_offset_in_larger_expression)
+RSI(14)[1] > 70 AND PRICE > SMA(50) ... ok
+test_zero_offset (test_parser.TestContextShifting.test_zero_offset)
+RSI(14)[0] — no-op, but valid ... ok
+test_multiple_args (test_parser.TestFunctionCalls.test_multiple_args) ... ok
+test_nested_function_call (test_parser.TestFunctionCalls.test_nested_function_call)
+SMA(RSI(14)) — function as argument. ... ok
+test_no_args (test_parser.TestFunctionCalls.test_no_args) ... ok
+test_single_arg (test_parser.TestFunctionCalls.test_single_arg) ... ok
+test_identifier_preserves_case (test_parser.TestIdentifiers.test_identifier_preserves_case) ... ok
+test_simple_identifier (test_parser.TestIdentifiers.test_simple_identifier) ... ok
+test_boolean_false (test_parser.TestLiterals.test_boolean_false) ... ok
+test_boolean_true (test_parser.TestLiterals.test_boolean_true) ... ok
+test_float (test_parser.TestLiterals.test_float) ... ok
+test_integer (test_parser.TestLiterals.test_integer) ... ok
+test_empty_expression (test_parser.TestParserErrors.test_empty_expression) ... ok
+test_trailing_tokens (test_parser.TestParserErrors.test_trailing_tokens) ... ok
+test_unexpected_token (test_parser.TestParserErrors.test_unexpected_token) ... ok
+test_unmatched_lparen (test_parser.TestParserErrors.test_unmatched_lparen) ... ok
+test_unmatched_rparen (test_parser.TestParserErrors.test_unmatched_rparen) ... ok
+test_double_not (test_parser.TestUnaryOperators.test_double_not) ... ok
+test_not (test_parser.TestUnaryOperators.test_not) ... ok
+test_unary_minus (test_parser.TestUnaryOperators.test_unary_minus) ... ok
+test_from_error (test_registry.TestFunctionResult.test_from_error) ... ok
+test_insufficient_data (test_registry.TestFunctionResult.test_insufficient_data) ... ok
+test_success (test_registry.TestFunctionResult.test_success) ... ok
+test_get_handler (test_registry.TestHandlerLookup.test_get_handler) ... ok
+test_handler_executes (test_registry.TestHandlerLookup.test_handler_executes) ... ok
+test_unknown_handler_raises (test_registry.TestHandlerLookup.test_unknown_handler_raises) ... ok
+test_get_available_functions (test_registry.TestIntrospection.test_get_available_functions) ... ok
+test_get_function_meta (test_registry.TestIntrospection.test_get_function_meta) ... ok
+test_unknown_meta_raises (test_registry.TestIntrospection.test_unknown_meta_raises) ... ok
+test_decorator_registration (test_registry.TestRegistration.test_decorator_registration) ... ok
+test_duplicate_raises (test_registry.TestRegistration.test_duplicate_raises) ... ok
+test_lock_flag (test_registry.TestRegistration.test_lock_flag) ... ok
+test_locked_registry_rejects (test_registry.TestRegistration.test_locked_registry_rejects) ... ok
+test_programmatic_registration (test_registry.TestRegistration.test_programmatic_registration) ... ok
+
+----------------------------------------------------------------------
+Ran 178 tests in 0.665s
+
+OK
+racoya@Rodneys-MacBook-Pro stockstats-lecat % 
+
+
+
