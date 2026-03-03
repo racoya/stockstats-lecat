@@ -7,6 +7,9 @@ Coordinates the full evolutionary pipeline:
   4. Elitism (preserve top performers)
   5. Repeat for N generations
 
+Supports Walk-Forward Validation via split_ratio parameter:
+train on the first N% of data, validate the best strategy on the rest.
+
 See docs/05_Integration_Strategy.md for design.
 """
 
@@ -43,6 +46,17 @@ class GenerationReport:
 
 
 @dataclass
+class WalkForwardResult:
+    """Walk-forward validation result (train vs test comparison)."""
+
+    train_fitness: FitnessResult
+    test_fitness: FitnessResult
+    train_bars: int
+    test_bars: int
+    overfit_ratio: float  # test_sharpe / train_sharpe (< 1 = overfitting)
+
+
+@dataclass
 class OptimizationResult:
     """Final result of the optimization run."""
 
@@ -50,6 +64,7 @@ class OptimizationResult:
     best_fitness_result: FitnessResult
     generations: list[GenerationReport]
     total_elapsed_ms: float
+    walk_forward: WalkForwardResult | None = None
 
 
 # Default configuration
@@ -102,15 +117,31 @@ class Optimizer:
             self._registry, max_depth=max_depth, seed=seed
         )
 
-    def run(self, generations: int = DEFAULT_GENERATIONS) -> OptimizationResult:
+    def run(
+        self,
+        generations: int = DEFAULT_GENERATIONS,
+        split_ratio: float | None = None,
+    ) -> OptimizationResult:
         """Run the full evolutionary optimization.
 
         Args:
             generations: Number of generations to evolve.
+            split_ratio: If set (0.0–1.0), enables Walk-Forward Validation.
+                         Trains on first N% of data, validates best strategy
+                         on the remaining (1-N)%. Default: None (use all data).
 
         Returns:
             OptimizationResult with the best strategy found.
         """
+        # Apply walk-forward split if requested
+        train_ctx = self._context
+        test_ctx: MarketContext | None = None
+        if split_ratio is not None:
+            train_ctx, test_ctx = self._context.split(split_ratio)
+            # Update backtester context to train only
+            self._train_context = train_ctx
+        else:
+            self._train_context = self._context
         total_start = time.perf_counter()
         reports: list[GenerationReport] = []
 
@@ -120,7 +151,10 @@ class Optimizer:
             print(f"{'═' * 70}")
             print(f"  Population: {self._population_size}  |  Generations: {generations}")
             print(f"  Elite: {self._elite_count}  |  Mutation: {self._mutation_rate:.0%}")
-            print(f"  Bars: {self._context.total_bars:,}")
+            if split_ratio is not None:
+                print(f"  Train: {train_ctx.total_bars:,} bars  |  Test: {test_ctx.total_bars:,} bars  ({split_ratio:.0%}/{1-split_ratio:.0%})")
+            else:
+                print(f"  Bars: {self._context.total_bars:,}")
             print(f"{'═' * 70}\n")
 
         # Step 1: Initialize population
@@ -168,17 +202,38 @@ class Optimizer:
         if self._verbose:
             self._print_generation(final_report)
 
-        # Get best individual's full fitness
+        # Get best individual's full fitness on training data
         best = population[0]
-        best_backtest = self._backtester.run(best.ast, self._context, expression=best.expression)
-        best_fitness = calculate_fitness(best_backtest, self._context)
+        best_backtest = self._backtester.run(best.ast, train_ctx, expression=best.expression)
+        best_fitness = calculate_fitness(best_backtest, train_ctx)
+
+        # Walk-forward validation on test data
+        walk_forward: WalkForwardResult | None = None
+        if test_ctx is not None:
+            test_backtest = self._backtester.run(best.ast, test_ctx, expression=best.expression)
+            test_fitness = calculate_fitness(test_backtest, test_ctx)
+
+            train_sharpe = best_fitness.sharpe_ratio if best_fitness.sharpe_ratio != 0 else 1e-9
+            overfit_ratio = test_fitness.sharpe_ratio / train_sharpe if train_sharpe != 0 else 0.0
+
+            walk_forward = WalkForwardResult(
+                train_fitness=best_fitness,
+                test_fitness=test_fitness,
+                train_bars=train_ctx.total_bars,
+                test_bars=test_ctx.total_bars,
+                overfit_ratio=overfit_ratio,
+            )
 
         total_elapsed = (time.perf_counter() - total_start) * 1000
 
         if self._verbose:
             print(f"\n{'─' * 70}")
             print(f"  Best Strategy: {best.expression}")
-            print(f"  {best_fitness}")
+            print(f"  Train: {best_fitness}")
+            if walk_forward is not None:
+                wf = walk_forward
+                print(f"  Test:  {wf.test_fitness}")
+                print(f"  Overfit Ratio: {wf.overfit_ratio:.2f} (1.0 = ideal, <1 = overfit)")
             print(f"  Total time: {total_elapsed:.0f}ms")
             print(f"{'─' * 70}\n")
 
@@ -187,6 +242,7 @@ class Optimizer:
             best_fitness_result=best_fitness,
             generations=reports,
             total_elapsed_ms=total_elapsed,
+            walk_forward=walk_forward,
         )
 
     # ------------------------------------------------------------------
@@ -218,13 +274,18 @@ class Optimizer:
         return population
 
     def _evaluate_population(self, population: list[Individual]) -> None:
-        """Run backtest and fitness scoring for each individual."""
+        """Run backtest and fitness scoring for each individual.
+
+        Uses _train_context (which may be a subset of the full data
+        when walk-forward validation is active).
+        """
+        ctx = self._train_context
         for ind in population:
             try:
                 result = self._backtester.run(
-                    ind.ast, self._context, expression=ind.expression
+                    ind.ast, ctx, expression=ind.expression
                 )
-                fitness = calculate_fitness(result, self._context)
+                fitness = calculate_fitness(result, ctx)
                 ind.fitness = fitness.fitness_score
             except Exception:
                 ind.fitness = -999.0
@@ -273,8 +334,8 @@ class Optimizer:
         best_result = None
         if best:
             try:
-                bt = self._backtester.run(best.ast, self._context)
-                best_result = calculate_fitness(bt, self._context)
+                bt = self._backtester.run(best.ast, self._train_context)
+                best_result = calculate_fitness(bt, self._train_context)
             except Exception:
                 pass
 

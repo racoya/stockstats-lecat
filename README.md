@@ -21,6 +21,7 @@ RSI(14)[1] > 70 AND (close > open)[1]
 | **Phase 2** — Core Implementation | Sprint 2 — Evaluator & Registry | ✅ Complete |
 | **Phase 2** — Core Implementation | Sprint 3 — Backtester & Generator | ✅ Complete |
 | **Phase 3** — Optimization & Evolution | Sprint 1 — Genetic Engine | ✅ Complete |
+| **Phase 3** — Optimization & Evolution | Sprint 2 — Data & Validation | ✅ Complete |
 
 ---
 
@@ -85,7 +86,7 @@ stockstats-lecat/
 │   ├── ast_nodes.py          # AST nodes + ast_to_string() serializer
 │   ├── lexer.py              # Tokenizer — string → token stream
 │   ├── parser.py             # Recursive descent parser — tokens → AST
-│   ├── context.py            # MarketContext (OHLCV data + bar position)
+│   ├── context.py            # MarketContext (OHLCV data + split())
 │   ├── registry.py           # FunctionRegistry with @register decorator
 │   ├── evaluator.py          # Tree-walking AST evaluator
 │   ├── std_lib.py            # Built-in indicators (PRICE, SMA, EMA, RSI, ATR)
@@ -95,8 +96,10 @@ stockstats-lecat/
 │   ├── main.py               # CLI entry point
 │   ├── fitness.py            # PnL, Sharpe Ratio, fitness scoring
 │   ├── evolution.py          # Genetic operators (mutation, crossover, selection)
-│   └── optimizer.py          # GA loop with elitism
-├── tests/                    # Unit tests (178 tests)
+│   ├── optimizer.py          # GA loop with walk-forward validation
+│   ├── data_loader.py        # CSV/DataFrame ingestion into MarketContext
+│   └── reporting.py          # Equity curve charts and text reports
+├── tests/                    # Unit tests (198 tests)
 │   ├── test_lexer.py         # Lexer tests (31 tests)
 │   ├── test_parser.py        # Parser tests (39 tests)
 │   ├── test_registry.py      # Registry tests (15 tests)
@@ -104,7 +107,9 @@ stockstats-lecat/
 │   ├── test_generator.py     # Generator tests (10 tests)
 │   ├── test_backtester.py    # Backtester tests (14 tests)
 │   ├── test_fitness.py       # Fitness tests (10 tests)
-│   └── test_evolution.py     # Evolution tests (18 tests)
+│   ├── test_evolution.py     # Evolution tests (18 tests)
+│   ├── test_data_loader.py   # Data loader tests (12 tests)
+│   └── test_reporting.py     # Reporting tests (8 tests)
 ├── docs/                     # System design documentation (SDD/SRS)
 │   ├── 00_Overview.md
 │   ├── 01_Grammar_Specification.md

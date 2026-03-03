@@ -115,6 +115,52 @@ class MarketContext:
             )
         return fields[field]
 
+    def split(self, ratio: float) -> tuple[MarketContext, MarketContext]:
+        """Split data into train and test MarketContexts.
+
+        Used for Walk-Forward Validation — train on first portion,
+        test on the rest.
+
+        Args:
+            ratio: Fraction of data for training (0.0–1.0).
+
+        Returns:
+            Tuple of (train_context, test_context).
+
+        Raises:
+            ValueError: If ratio is not between 0 and 1.
+        """
+        if not 0.0 < ratio < 1.0:
+            raise ValueError(f"split ratio must be between 0 and 1, got {ratio}")
+
+        split_idx = int(len(self.close) * ratio)
+        if split_idx < 1:
+            split_idx = 1
+        if split_idx >= len(self.close):
+            split_idx = len(self.close) - 1
+
+        train = MarketContext(
+            open=list(self.open[:split_idx]),
+            high=list(self.high[:split_idx]),
+            low=list(self.low[:split_idx]),
+            close=list(self.close[:split_idx]),
+            volume=list(self.volume[:split_idx]),
+            bar_index=split_idx - 1,
+            symbol=self.symbol,
+            timeframe=self.timeframe,
+        )
+        test = MarketContext(
+            open=list(self.open[split_idx:]),
+            high=list(self.high[split_idx:]),
+            low=list(self.low[split_idx:]),
+            close=list(self.close[split_idx:]),
+            volume=list(self.volume[split_idx:]),
+            bar_index=len(self.close) - split_idx - 1,
+            symbol=self.symbol,
+            timeframe=self.timeframe,
+        )
+        return train, test
+
 
 class LookAheadError(Exception):
     """Raised when an operation attempts to access future bar data."""
